@@ -12,7 +12,6 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --green-500: #22c55e;
     --bg: #0d1117; --surface: #161b22; --surface2: #21262d;
     --border: rgba(240,246,252,.1); --border2: rgba(240,246,252,.2);
     --text: #e6edf3; --muted: #8b949e; --accent: #3fb950;
@@ -20,7 +19,6 @@
     --radius: 8px; --radius-lg: 12px; --radius-xl: 16px;
   }
 
-  /* ── BASE ─────────────────────────────────────── */
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 60px;
@@ -75,7 +73,6 @@
     flex-shrink: 0;
   }
 
-  /* Desktop nav */
   .nav { display: flex; gap: 24px; align-items: center; }
   .nav a {
     color: var(--muted);
@@ -86,10 +83,9 @@
   }
   .nav a:hover { color: var(--text); }
 
-  /* Header CTA (desktop only) */
   .header-cta { display: inline-flex; }
 
-  /* Hamburger button */
+  /* Hamburger */
   .hamburger {
     display: none;
     flex-direction: column;
@@ -198,29 +194,6 @@
   .btn-outline:hover { background: var(--surface2); border-color: var(--accent); }
   .btn-outline:active { background: var(--surface2); transform: scale(0.97); }
 
-  /* Upload zone browse button (non-interactive — parent handles it) */
-  .browse-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border2);
-    color: var(--text);
-    padding: 8px 20px;
-    min-height: 40px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    font-weight: 500;
-    background: transparent;
-    font-family: inherit;
-    pointer-events: none;
-    transition: background .2s, border-color .2s;
-  }
-  .upload-zone:hover .browse-btn,
-  .upload-zone.drag-over .browse-btn {
-    background: var(--surface2);
-    border-color: var(--accent);
-  }
-
   /* ── HERO ─────────────────────────────────────── */
   .hero {
     padding: 60px 1.25rem 48px;
@@ -282,12 +255,12 @@
   .stat-num { font-size: 20px; font-weight: 700; color: var(--accent); }
   .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: .3px; }
 
-  /* ── MAIN CONTAINER ───────────────────────────── */
+  /* ── CONTAINER ────────────────────────────────── */
   .container {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 0 1.25rem max(80px, calc(60px + env(safe-area-inset-bottom)));
-    padding-left: max(1.25rem, env(safe-area-inset-left));
+    padding: 0 max(1.25rem, env(safe-area-inset-left))
+             max(80px, calc(60px + env(safe-area-inset-bottom)));
     padding-right: max(1.25rem, env(safe-area-inset-right));
   }
 
@@ -300,7 +273,7 @@
   }
   .section-title span { color: var(--accent); }
 
-  /* ── UPLOAD ZONE ──────────────────────────────── */
+  /* ── UPLOAD SECTION ───────────────────────────── */
   .upload-section { max-width: 720px; margin: 0 auto 52px; }
 
   .demo-note {
@@ -320,38 +293,112 @@
     word-break: break-all;
   }
 
+  /* ─────────────────────────────────────────────────
+     UPLOAD ZONE — Fixed for mobile
+     The file input is NOT absolutely positioned.
+     Instead we use a <label> as the clickable trigger
+     and a separate hidden <input>.
+  ───────────────────────────────────────────────── */
   .upload-zone {
     border: 2px dashed var(--border2);
     border-radius: var(--radius-xl);
-    padding: 36px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color .2s, background .2s;
     background: var(--surface);
-    position: relative;
+    text-align: center;
+    transition: border-color .2s, background .2s;
+    overflow: hidden;
   }
-  .upload-zone:hover,
   .upload-zone.drag-over {
     border-color: var(--accent);
     background: rgba(63,185,80,.04);
   }
-  .upload-zone input[type="file"] {
-    position: absolute; inset: 0;
-    opacity: 0; cursor: pointer;
-    width: 100%; height: 100%;
-    font-size: 16px; /* Prevents iOS auto-zoom */
+
+  /* The label IS the clickable drop zone */
+  .upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 20px;
+    cursor: pointer;
+    width: 100%;
+    /* Ensure full tap area on mobile */
+    -webkit-tap-highlight-color: rgba(63,185,80,.1);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
   }
+  .upload-label:hover,
+  .upload-label:focus-within {
+    background: rgba(63,185,80,.04);
+  }
+  .upload-label:active {
+    background: rgba(63,185,80,.08);
+  }
+
+  /* The actual file input — hidden but accessible */
+  #file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+    /* font-size 16px prevents iOS auto-zoom if it were visible */
+    font-size: 16px;
+  }
+
   .upload-icon {
     width: 60px; height: 60px;
     background: rgba(63,185,80,.1);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 14px;
+    margin-bottom: 14px;
     font-size: 26px;
+    pointer-events: none;
   }
-  .upload-zone h3 { font-size: clamp(15px, 3.5vw, 18px); font-weight: 600; margin-bottom: 8px; }
-  .upload-zone p { color: var(--muted); font-size: 13px; }
-  .upload-zone .or { margin: 10px 0; color: var(--muted); font-size: 13px; }
+  .upload-label h3 {
+    font-size: clamp(15px, 3.5vw, 18px);
+    font-weight: 600;
+    margin-bottom: 8px;
+    pointer-events: none;
+  }
+  .upload-label .sub-text {
+    color: var(--muted);
+    font-size: 13px;
+    pointer-events: none;
+  }
+  .upload-label .or {
+    margin: 12px 0;
+    color: var(--muted);
+    font-size: 13px;
+    pointer-events: none;
+  }
+
+  /* Browse button styled element inside label */
+  .browse-btn-inner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 9px 22px;
+    min-height: 42px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    background: transparent;
+    font-family: inherit;
+    transition: background .2s, border-color .2s;
+    pointer-events: none; /* label handles the click */
+  }
+  .upload-label:hover .browse-btn-inner,
+  .upload-label:active .browse-btn-inner {
+    background: var(--surface2);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 
   /* Error */
   #error-banner {
@@ -363,6 +410,7 @@
     padding: 12px 16px;
     font-size: 14px;
     margin-top: 14px;
+    line-height: 1.5;
   }
 
   /* ── PREVIEW ──────────────────────────────────── */
@@ -422,8 +470,12 @@
   /* ── RESULTS ──────────────────────────────────── */
   #results-section { display: none; margin-top: 28px; }
 
-  .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
   .metric-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -431,13 +483,23 @@
     padding: 14px 10px;
     text-align: center;
   }
-  .metric-card .val { font-size: clamp(20px, 5vw, 28px); font-weight: 700; line-height: 1; margin-bottom: 6px; }
-  .metric-card .lbl { font-size: 10px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .4px; }
+  .metric-card .val {
+    font-size: clamp(20px, 5vw, 28px);
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .metric-card .lbl {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
   .val.green { color: var(--accent); }
   .val.red   { color: #f87171; }
   .val.blue  { color: #60a5fa; }
 
-  /* Detection list */
   .detections-list {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -478,7 +540,7 @@
     flex-shrink: 0;
   }
   .det-badge.weed { background: rgba(248,113,113,.15); color: #f87171; }
-  .det-badge.crop { background: rgba(63,185,80,.15); color: #3fb950; }
+  .det-badge.crop { background: rgba(63,185,80,.15);   color: #3fb950; }
   .det-coords {
     font-family: "DM Mono", monospace;
     font-size: 10px;
@@ -488,7 +550,7 @@
     white-space: nowrap;
   }
   .det-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .det-conf { font-family: "DM Mono", monospace; font-size: 12px; color: var(--muted); }
+  .det-conf  { font-family: "DM Mono", monospace; font-size: 12px; color: var(--muted); }
   .conf-bar-wrap { width: 60px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
   .conf-bar { height: 100%; border-radius: 2px; transition: width .4s ease; }
   .conf-bar.weed-bar { background: #f87171; }
@@ -497,7 +559,6 @@
   /* ── HOW IT WORKS ─────────────────────────────── */
   .how-section { max-width: 860px; margin: 0 auto 72px; }
   .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-
   .step-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -514,7 +575,7 @@
     margin-bottom: 12px;
   }
   .step-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-  .step-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .step-card p  { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
   /* ── API SECTION ──────────────────────────────── */
   .api-section {
@@ -545,7 +606,6 @@
   .code-block .kw  { color: #ff7b72; }
   .code-block .str { color: #a5d6ff; }
   .code-block .cm  { color: #8b949e; }
-  .code-block .fn  { color: #d2a8ff; }
   .copy-btn {
     position: absolute; top: 10px; right: 10px;
     background: var(--surface2);
@@ -578,85 +638,52 @@
   /* ─────────────────────────────────────────────────
      RESPONSIVE BREAKPOINTS
   ───────────────────────────────────────────────── */
-
-  /* ≤ 768px — Tablet & small desktop */
   @media (max-width: 768px) {
-    /* Show hamburger, hide desktop nav & CTA */
     .nav        { display: none; }
     .header-cta { display: none; }
     .hamburger  { display: flex; }
 
-    /* Stats: wrap to 2×2 grid with dividers */
-    .stat {
-      flex: 1 1 45%;
-      border-bottom: 1px solid var(--border);
-    }
+    .stat { flex: 1 1 45%; border-bottom: 1px solid var(--border); }
     .stat:nth-child(odd) { border-right: 1px solid var(--border); }
     .stat:nth-child(n+3) { border-bottom: none; }
 
-    /* Metrics: 2-col on tablet */
     .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-
-    /* Steps: 1-col */
-    .steps { grid-template-columns: 1fr; gap: 12px; }
-
-    /* API padding */
-    .api-section { padding: 20px 16px; }
+    .steps        { grid-template-columns: 1fr; gap: 12px; }
+    .api-section  { padding: 20px 16px; }
   }
 
-  /* ≤ 600px — Mobile */
   @media (max-width: 600px) {
-    /* Hero padding */
-    .hero { padding: 36px 1rem 32px; }
-
-    /* Upload */
-    .upload-zone { padding: 28px 16px; }
-    .upload-icon { width: 52px; height: 52px; font-size: 22px; margin-bottom: 12px; }
-
-    /* Preview: stack vertically */
-    .preview-grid { grid-template-columns: 1fr; }
+    .hero           { padding: 36px 1rem 32px; }
+    .upload-label   { padding: 28px 16px; }
+    .upload-icon    { width: 52px; height: 52px; font-size: 22px; margin-bottom: 12px; }
+    .preview-grid   { grid-template-columns: 1fr; }
     .preview-card img,
     .preview-card canvas { height: 240px; }
-
-    /* Preview action buttons: full-width */
     .preview-actions .btn-primary,
     .preview-actions .btn-outline { max-width: 100%; }
-
-    /* Hide bbox coords on small screens */
-    .det-coords { display: none; }
-
-    /* Container */
-    .container { padding-left: 1rem; padding-right: 1rem; }
-
-    /* How / API sections */
-    .how-section  { margin-bottom: 48px; }
+    .det-coords     { display: none; }
+    .container      { padding-left: 1rem; padding-right: 1rem; }
+    .how-section    { margin-bottom: 48px; }
     .upload-section { margin-bottom: 40px; }
-    .api-section  { margin-bottom: 48px; }
+    .api-section    { margin-bottom: 48px; }
   }
 
-  /* ≤ 380px — Small phones (iPhone SE) */
   @media (max-width: 380px) {
-    header { padding: 0 1rem; }
-    .logo  { font-size: 16px; gap: 8px; }
-    .logo-icon { width: 26px; height: 26px; font-size: 14px; }
-
-    /* Stats: full-width vertical stack */
-    .stat { flex: 1 1 100%; border-right: none !important; border-bottom: 1px solid var(--border); }
+    header      { padding: 0 1rem; }
+    .logo       { font-size: 16px; gap: 8px; }
+    .logo-icon  { width: 26px; height: 26px; font-size: 14px; }
+    .stat       { flex: 1 1 100%; border-right: none !important; border-bottom: 1px solid var(--border); }
     .stat:last-child { border-bottom: none; }
-
-    /* Metrics: still 2-col but tighter */
-    .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-    .metric-card  { padding: 12px 8px; }
+    .metrics-grid    { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .metric-card     { padding: 12px 8px; }
   }
 
-  /* Landscape mobile — save vertical space */
   @media (max-height: 500px) and (orientation: landscape) {
-    .hero        { padding: 24px 1rem 20px; }
-    .upload-zone { padding: 20px 16px; }
-    .upload-icon { display: none; }
+    .hero         { padding: 24px 1rem 20px; }
+    .upload-label { padding: 20px 16px; }
+    .upload-icon  { display: none; }
   }
 
-  /* Reduced motion — override animations */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -667,67 +694,65 @@
 </head>
 <body>
 
-<!-- ── HEADER ──────────────────────────────────────────── -->
+<!-- ── HEADER ─────────────────────────────────────── -->
 <header>
   <div class="logo">
     <div class="logo-icon">🌿</div>
     WeedScan
   </div>
-
-  <!-- Desktop navigation -->
   <nav class="nav" aria-label="Main navigation">
     <a href="#detect">Detect</a>
     <a href="#how">How it works</a>
     <a href="#api">API</a>
   </nav>
-
-  <!-- Desktop CTA -->
-  <button class="btn-primary header-cta" onclick="document.getElementById('detect').scrollIntoView({behavior:'smooth'})">
+  <button class="btn-primary header-cta"
+          onclick="document.getElementById('detect').scrollIntoView({behavior:'smooth'})">
     Try Demo
   </button>
-
-  <!-- Mobile hamburger -->
-  <button class="hamburger" id="hamburger-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-nav">
+  <button class="hamburger" id="hamburger-btn"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-nav">
     <span></span><span></span><span></span>
   </button>
 </header>
 
-<!-- ── MOBILE NAV DRAWER ────────────────────────────────── -->
+<!-- ── MOBILE NAV DRAWER ──────────────────────────── -->
 <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
   <a href="#detect" onclick="closeMobileNav()">🔍 Detect</a>
   <a href="#how"    onclick="closeMobileNav()">📖 How it works</a>
   <a href="#api"    onclick="closeMobileNav()">🔌 API</a>
-  <button class="btn-primary" onclick="closeMobileNav(); document.getElementById('detect').scrollIntoView({behavior:'smooth'})">
+  <button class="btn-primary"
+          onclick="closeMobileNav();
+                   document.getElementById('detect').scrollIntoView({behavior:'smooth'})">
     Try Demo →
   </button>
 </nav>
 
-<!-- ── HERO ─────────────────────────────────────────────── -->
-<section class="hero" aria-labelledby="hero-heading">
+<!-- ── HERO ───────────────────────────────────────── -->
+<section class="hero">
   <div class="hero-badge">🤖 Powered by YOLOv8</div>
-  <h1 id="hero-heading">Detect Weeds with<br/><span>AI Precision</span></h1>
+  <h1>Detect Weeds with<br/><span>AI Precision</span></h1>
   <p>Upload a field image and get instant weed vs. crop detection results powered by our trained YOLOv8 model.</p>
-  <button class="btn-primary hero-cta" onclick="document.getElementById('detect').scrollIntoView({behavior:'smooth'})">
+  <button class="btn-primary hero-cta"
+          onclick="document.getElementById('detect').scrollIntoView({behavior:'smooth'})">
     Analyze Your Field →
   </button>
 </section>
 
-<!-- ── STATS BAR ─────────────────────────────────────────── -->
-<div class="stats-bar" role="list" aria-label="Model statistics">
-  <div class="stat" role="listitem"><div class="stat-num">YOLOv8</div><div class="stat-label">Detection Model</div></div>
-  <div class="stat" role="listitem"><div class="stat-num">640px</div><div class="stat-label">Input Resolution</div></div>
-  <div class="stat" role="listitem"><div class="stat-num">~20ms</div><div class="stat-label">Inference Time</div></div>
-  <div class="stat" role="listitem"><div class="stat-num">mAP50</div><div class="stat-label">Evaluation Metric</div></div>
+<!-- ── STATS BAR ──────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num">YOLOv8</div><div class="stat-label">Detection Model</div></div>
+  <div class="stat"><div class="stat-num">640px</div><div class="stat-label">Input Resolution</div></div>
+  <div class="stat"><div class="stat-num">~20ms</div><div class="stat-label">Inference Time</div></div>
+  <div class="stat"><div class="stat-num">mAP50</div><div class="stat-label">Evaluation Metric</div></div>
 </div>
 
-<!-- ── MAIN CONTAINER ────────────────────────────────────── -->
+<!-- ── MAIN ───────────────────────────────────────── -->
 <main class="container">
 
-  <!-- DETECT SECTION -->
-  <section id="detect" aria-labelledby="detect-title">
-    <h2 class="section-title" id="detect-title">
-      Upload Field Image <span>→ Detect Weeds</span>
-    </h2>
+  <section id="detect">
+    <h2 class="section-title">Upload Field Image <span>→ Detect Weeds</span></h2>
 
     <div class="upload-section">
       <div class="demo-note" role="note">
@@ -735,20 +760,34 @@
         <code>http://localhost:8000/predict</code> to get real detections.
       </div>
 
-      <!-- Upload Zone -->
-      <div class="upload-zone" id="upload-zone" role="button" aria-label="Upload field image">
-        <!-- capture="environment" opens rear camera on mobile -->
-        <input type="file" id="file-input" accept="image/*" capture="environment" aria-label="Select image file" />
-        <div class="upload-icon" aria-hidden="true">📷</div>
-        <h3>Drop your field image here</h3>
-        <p>Supports JPG, PNG, WEBP up to 20MB</p>
-        <div class="or" aria-hidden="true">— or —</div>
-        <span class="browse-btn" aria-hidden="true">Browse / Camera</span>
-      </div>
+      <!-- ══════════════════════════════════════════
+           UPLOAD ZONE
+           Hidden <input> + visible <label>.
+           The label is the full clickable/tappable
+           area — no z-index tricks needed.
+      ═══════════════════════════════════════════ -->
+      <div class="upload-zone" id="upload-zone">
+
+        <!-- Hidden real file input — linked to label via id -->
+        <input type="file"
+               id="file-input"
+               accept="image/*"
+               aria-label="Select a field image to analyse" />
+
+        <!-- Label covers the entire zone — tapping anywhere triggers the input -->
+        <label for="file-input" class="upload-label">
+          <div class="upload-icon" aria-hidden="true">📷</div>
+          <h3>Drop your field image here</h3>
+          <p class="sub-text">Supports JPG, PNG, WEBP · max 20 MB</p>
+          <div class="or" aria-hidden="true">— or —</div>
+          <span class="browse-btn-inner">Browse / Camera</span>
+        </label>
+
+      </div><!-- /.upload-zone -->
 
       <div id="error-banner" role="alert"></div>
 
-      <!-- Image Preview -->
+      <!-- Preview -->
       <div id="preview-section" aria-live="polite">
         <div class="preview-grid">
           <div class="preview-card">
@@ -763,10 +802,9 @@
               <span class="label">Annotated Result</span>
               <span id="inf-time-label" style="font-size:11px;color:var(--accent)"></span>
             </div>
-            <canvas id="annotated-canvas" aria-label="Annotated detection result"></canvas>
+            <canvas id="annotated-canvas" aria-label="Detection result with bounding boxes"></canvas>
           </div>
         </div>
-
         <div class="preview-actions">
           <button class="btn-primary" id="analyze-btn" onclick="analyzeImage()">
             🔍 Analyze Image
@@ -801,7 +839,6 @@
             <div class="lbl">Inference</div>
           </div>
         </div>
-
         <div class="detections-list">
           <div class="detections-header">
             <span>Detection Details</span>
@@ -810,12 +847,13 @@
           <div id="detection-items"></div>
         </div>
       </div>
-    </div>
+
+    </div><!-- /.upload-section -->
   </section>
 
   <!-- HOW IT WORKS -->
-  <section id="how" class="how-section" aria-labelledby="how-title">
-    <h2 class="section-title" id="how-title">How It <span>Works</span></h2>
+  <section id="how" class="how-section">
+    <h2 class="section-title">How It <span>Works</span></h2>
     <div class="steps">
       <div class="step-card">
         <div class="step-num" aria-hidden="true">1</div>
@@ -836,8 +874,8 @@
   </section>
 
   <!-- API SECTION -->
-  <section id="api" class="api-section" aria-labelledby="api-title">
-    <h3 id="api-title">🔌 API Integration</h3>
+  <section id="api" class="api-section">
+    <h3>🔌 API Integration</h3>
     <p>Integrate weed detection directly into your application with a simple POST request.</p>
     <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)" aria-label="Copy code snippet">Copy</button>
@@ -864,282 +902,252 @@
 
 </main>
 
-<!-- ── FOOTER ───────────────────────────────────────────── -->
 <footer>
   WeedScan — YOLOv8 Weed Detection &nbsp;·&nbsp; Built with FastAPI + Ultralytics
 </footer>
 
 <script>
-  'use strict';
+'use strict';
 
-  const API_URL = 'https://shreyaswali-weed-detection-api.hf.space/predict';
-  let uploadedFile = null;
+const API_URL    = 'http://localhost:8000/predict';
+let uploadedFile = null;
 
-  /* ── Element refs ──────────────────────────── */
-  const uploadZone   = document.getElementById('upload-zone');
-  const fileInput    = document.getElementById('file-input');
-  const previewSec   = document.getElementById('preview-section');
-  const loadingSec   = document.getElementById('loading-section');
-  const resultsSec   = document.getElementById('results-section');
-  const errorBanner  = document.getElementById('error-banner');
-  const previewImg   = document.getElementById('preview-img');
-  const canvas       = document.getElementById('annotated-canvas');
-  const ctx          = canvas.getContext('2d');
-  const analyzeBtn   = document.getElementById('analyze-btn');
-  const hamburgerBtn = document.getElementById('hamburger-btn');
-  const mobileNav    = document.getElementById('mobile-nav');
+/* ── Element refs ──────────────────────────── */
+const uploadZone   = document.getElementById('upload-zone');
+const fileInput    = document.getElementById('file-input');
+const previewSec   = document.getElementById('preview-section');
+const loadingSec   = document.getElementById('loading-section');
+const resultsSec   = document.getElementById('results-section');
+const errorBanner  = document.getElementById('error-banner');
+const previewImg   = document.getElementById('preview-img');
+const canvas       = document.getElementById('annotated-canvas');
+const ctx          = canvas.getContext('2d');
+const analyzeBtn   = document.getElementById('analyze-btn');
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const mobileNav    = document.getElementById('mobile-nav');
 
-  /* ── Hamburger / Mobile Nav ────────────────── */
-  hamburgerBtn.addEventListener('click', () => {
-    const isOpen = mobileNav.classList.toggle('open');
-    hamburgerBtn.classList.toggle('open', isOpen);
-    hamburgerBtn.setAttribute('aria-expanded', String(isOpen));
-    hamburgerBtn.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-  });
+/* ── Hamburger ─────────────────────────────── */
+hamburgerBtn.addEventListener('click', () => {
+  const isOpen = mobileNav.classList.toggle('open');
+  hamburgerBtn.classList.toggle('open', isOpen);
+  hamburgerBtn.setAttribute('aria-expanded', String(isOpen));
+  hamburgerBtn.setAttribute('aria-label',
+    isOpen ? 'Close navigation menu' : 'Open navigation menu');
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+});
 
-  function closeMobileNav() {
-    mobileNav.classList.remove('open');
-    hamburgerBtn.classList.remove('open');
-    hamburgerBtn.setAttribute('aria-expanded', 'false');
-    hamburgerBtn.setAttribute('aria-label', 'Open navigation menu');
-    document.body.style.overflow = '';
+function closeMobileNav() {
+  mobileNav.classList.remove('open');
+  hamburgerBtn.classList.remove('open');
+  hamburgerBtn.setAttribute('aria-expanded', 'false');
+  hamburgerBtn.setAttribute('aria-label', 'Open navigation menu');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('click', e => {
+  if (mobileNav.classList.contains('open') &&
+      !mobileNav.contains(e.target) &&
+      !hamburgerBtn.contains(e.target)) {
+    closeMobileNav();
   }
+});
 
-  // Close on outside tap
-  document.addEventListener('click', e => {
-    if (mobileNav.classList.contains('open') &&
-        !mobileNav.contains(e.target) &&
-        !hamburgerBtn.contains(e.target)) {
-      closeMobileNav();
-    }
-  });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && mobileNav.classList.contains('open')) {
+    closeMobileNav();
+    hamburgerBtn.focus();
+  }
+});
 
-  // Close on Escape key
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && mobileNav.classList.contains('open')) {
-      closeMobileNav();
-      hamburgerBtn.focus();
-    }
-  });
+/* ── Drag & Drop ───────────────────────────── */
+uploadZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadZone.classList.add('drag-over');
+});
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) handleFile(f);
+  else showError('Please drop a valid image file (JPG, PNG, WEBP).');
+});
 
-  /* ── Drag & Drop ───────────────────────────── */
-  uploadZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    uploadZone.classList.add('drag-over');
-  });
-  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('drag-over');
-    const f = e.dataTransfer.files[0];
-    if (f && f.type.startsWith('image/')) handleFile(f);
-    else showError('Please drop a valid image file (JPG, PNG, WEBP).');
-  });
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) handleFile(fileInput.files[0]);
-  });
+/* ── File input change ─────────────────────── */
+fileInput.addEventListener('change', () => {
+  if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+});
 
-  /* ── Handle File ───────────────────────────── */
-  function handleFile(file) {
-    if (file.size > 20 * 1024 * 1024) {
-      showError('File too large. Please select an image under 20MB.');
-      return;
-    }
-    uploadedFile = file;
-    hideError();
-    resultsSec.style.display = 'none';
+/* ── Handle File ───────────────────────────── */
+function handleFile(file) {
+  if (file.size > 20 * 1024 * 1024) {
+    showError('File too large. Please select an image under 20 MB.');
+    return;
+  }
+  uploadedFile = file;
+  hideError();
+  resultsSec.style.display = 'none';
 
-    const reader = new FileReader();
-    reader.onload = e => {
-      previewImg.src = e.target.result;
-      previewImg.onload = () => {
-        document.getElementById('img-size-label').textContent =
-          `${previewImg.naturalWidth}×${previewImg.naturalHeight}`;
+  const reader = new FileReader();
+  reader.onload = e => {
+    previewImg.src = e.target.result;
+    previewImg.onload = () => {
+      document.getElementById('img-size-label').textContent =
+        `${previewImg.naturalWidth}×${previewImg.naturalHeight}`;
 
-        // Draw placeholder on canvas
-        canvas.width  = previewImg.naturalWidth;
-        canvas.height = previewImg.naturalHeight;
-        ctx.drawImage(previewImg, 0, 0);
-        ctx.fillStyle = 'rgba(63,185,80,0.15)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'rgba(255,255,255,0.75)';
-        const fs = Math.max(14, Math.floor(canvas.width / 20));
-        ctx.font = `bold ${fs}px "Space Grotesk", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.fillText('Tap "Analyze Image" to detect', canvas.width / 2, canvas.height / 2);
-      };
-      previewSec.style.display = 'block';
-      // Smooth scroll to preview on mobile after paint
-      requestAnimationFrame(() => {
-        previewSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
+      canvas.width  = previewImg.naturalWidth;
+      canvas.height = previewImg.naturalHeight;
+      ctx.drawImage(previewImg, 0, 0);
+      ctx.fillStyle = 'rgba(63,185,80,0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      const fs = Math.max(14, Math.floor(canvas.width / 20));
+      ctx.font = `bold ${fs}px "Space Grotesk", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('Tap "Analyze Image" to detect', canvas.width / 2, canvas.height / 2);
     };
-    reader.readAsDataURL(file);
+    previewSec.style.display = 'block';
+    requestAnimationFrame(() =>
+      previewSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    );
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ── Analyze ───────────────────────────────── */
+async function analyzeImage() {
+  if (!uploadedFile) return;
+  loadingSec.style.display  = 'block';
+  resultsSec.style.display  = 'none';
+  hideError();
+  analyzeBtn.disabled = true;
+  analyzeBtn.textContent = '⏳ Analyzing…';
+
+  try {
+    const fd = new FormData();
+    fd.append('file', uploadedFile);
+    const resp = await fetch(API_URL, { method: 'POST', body: fd });
+    if (!resp.ok) throw new Error(`Server error ${resp.status}`);
+    renderResults(await resp.json());
+  } catch (err) {
+    console.warn('Backend not reachable — showing demo results:', err.message);
+    await new Promise(r => setTimeout(r, 600));
+    renderResults(getDemoResults());
+  } finally {
+    loadingSec.style.display = 'none';
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = '🔍 Analyze Image';
+  }
+}
+
+/* ── Demo Results ──────────────────────────── */
+function getDemoResults() {
+  return {
+    detections: [
+      { class_name:'weed', confidence:0.9213, bbox:[55,40,180,155]   },
+      { class_name:'weed', confidence:0.8761, bbox:[310,200,430,310] },
+      { class_name:'crop', confidence:0.9540, bbox:[200,80,330,200]  },
+      { class_name:'weed', confidence:0.7803, bbox:[480,270,590,370] },
+      { class_name:'crop', confidence:0.8925, bbox:[380,350,500,460] },
+    ],
+    total_detections: 5, weed_count: 3, crop_count: 2, inference_time_ms: 18.4,
+    annotated_image: null,
+  };
+}
+
+/* ── Render Results ────────────────────────── */
+function renderResults(data) {
+  document.getElementById('met-total').textContent = data.total_detections;
+  document.getElementById('met-weeds').textContent = data.weed_count;
+  document.getElementById('met-crops').textContent = data.crop_count;
+  document.getElementById('met-time').textContent  = data.inference_time_ms + 'ms';
+  document.getElementById('inf-time-label').textContent = `⚡ ${data.inference_time_ms}ms`;
+
+  if (data.annotated_image) {
+    const img = new Image();
+    img.onload = () => { canvas.width = img.naturalWidth; canvas.height = img.naturalHeight; ctx.drawImage(img, 0, 0); };
+    img.src = 'data:image/jpeg;base64,' + data.annotated_image;
+  } else {
+    drawBoxes(data.detections);
   }
 
-  /* ── Analyze ───────────────────────────────── */
-  async function analyzeImage() {
-    if (!uploadedFile) return;
+  const container = document.getElementById('detection-items');
+  container.innerHTML = '';
+  document.getElementById('det-count').textContent = `${data.detections.length} objects`;
 
-    loadingSec.style.display  = 'block';
-    resultsSec.style.display  = 'none';
-    hideError();
-    analyzeBtn.disabled = true;
-    analyzeBtn.textContent = '⏳ Analyzing…';
-
-    try {
-      const formData = new FormData();
-      formData.append('file', uploadedFile);
-      const resp = await fetch(API_URL, { method: 'POST', body: formData });
-      if (!resp.ok) throw new Error(`Server error ${resp.status}`);
-      renderResults(await resp.json());
-    } catch (err) {
-      console.warn('Backend not reachable — showing demo results:', err.message);
-      // Small delay so loading state is visible
-      await new Promise(r => setTimeout(r, 600));
-      renderResults(getDemoResults());
-    } finally {
-      loadingSec.style.display = 'none';
-      analyzeBtn.disabled = false;
-      analyzeBtn.textContent = '🔍 Analyze Image';
-    }
-  }
-
-  /* ── Demo Results ──────────────────────────── */
-  function getDemoResults() {
-    const w = previewImg.naturalWidth  || 640;
-    const h = previewImg.naturalHeight || 480;
-    return {
-      detections: [
-        { class_id:1, class_name:'weed', confidence:0.9213, bbox:[55,40,180,155]  },
-        { class_id:1, class_name:'weed', confidence:0.8761, bbox:[310,200,430,310]},
-        { class_id:0, class_name:'crop', confidence:0.9540, bbox:[200,80,330,200] },
-        { class_id:1, class_name:'weed', confidence:0.7803, bbox:[480,270,590,370]},
-        { class_id:0, class_name:'crop', confidence:0.8925, bbox:[380,350,500,460]},
-      ],
-      total_detections: 5,
-      weed_count: 3,
-      crop_count: 2,
-      inference_time_ms: 18.4,
-      annotated_image: null,
-    };
-  }
-
-  /* ── Render Results ────────────────────────── */
-  function renderResults(data) {
-    // Metrics
-    document.getElementById('met-total').textContent = data.total_detections;
-    document.getElementById('met-weeds').textContent = data.weed_count;
-    document.getElementById('met-crops').textContent = data.crop_count;
-    document.getElementById('met-time').textContent  = data.inference_time_ms + 'ms';
-    document.getElementById('inf-time-label').textContent = `⚡ ${data.inference_time_ms}ms`;
-
-    // Annotated image or draw boxes
-    if (data.annotated_image) {
-      const img = new Image();
-      img.onload = () => {
-        canvas.width  = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        ctx.drawImage(img, 0, 0);
-      };
-      img.src = 'data:image/jpeg;base64,' + data.annotated_image;
-    } else {
-      drawBoxes(data.detections);
-    }
-
-    // Detection list
-    const container = document.getElementById('detection-items');
-    container.innerHTML = '';
-    document.getElementById('det-count').textContent = `${data.detections.length} objects`;
-
-    data.detections.forEach(d => {
-      const isWeed  = d.class_name.toLowerCase().includes('weed');
-      const confPct = Math.round(d.confidence * 100);
-      const row = document.createElement('div');
-      row.className = 'detection-item';
-      row.innerHTML = `
-        <div class="det-left">
-          <span class="det-badge ${isWeed ? 'weed' : 'crop'}">${d.class_name}</span>
-          <span class="det-coords">bbox [${d.bbox.map(v => Math.round(v)).join(', ')}]</span>
+  data.detections.forEach(d => {
+    const isWeed  = d.class_name.toLowerCase().includes('weed');
+    const confPct = Math.round(d.confidence * 100);
+    const row = document.createElement('div');
+    row.className = 'detection-item';
+    row.innerHTML = `
+      <div class="det-left">
+        <span class="det-badge ${isWeed ? 'weed' : 'crop'}">${d.class_name}</span>
+        <span class="det-coords">bbox [${d.bbox.map(v => Math.round(v)).join(', ')}]</span>
+      </div>
+      <div class="det-right">
+        <div class="conf-bar-wrap">
+          <div class="conf-bar ${isWeed ? 'weed-bar' : 'crop-bar'}" style="width:${confPct}%"></div>
         </div>
-        <div class="det-right">
-          <div class="conf-bar-wrap">
-            <div class="conf-bar ${isWeed ? 'weed-bar' : 'crop-bar'}" style="width:${confPct}%"></div>
-          </div>
-          <span class="det-conf">${confPct}%</span>
-        </div>`;
-      container.appendChild(row);
-    });
+        <span class="det-conf">${confPct}%</span>
+      </div>`;
+    container.appendChild(row);
+  });
 
-    resultsSec.style.display = 'block';
-    requestAnimationFrame(() => {
-      resultsSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
-  }
+  resultsSec.style.display = 'block';
+  requestAnimationFrame(() =>
+    resultsSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  );
+}
 
-  /* ── Draw Bounding Boxes ───────────────────── */
-  function drawBoxes(detections) {
-    canvas.width  = previewImg.naturalWidth;
-    canvas.height = previewImg.naturalHeight;
-    ctx.drawImage(previewImg, 0, 0);
+/* ── Draw Bounding Boxes ───────────────────── */
+function drawBoxes(detections) {
+  canvas.width  = previewImg.naturalWidth;
+  canvas.height = previewImg.naturalHeight;
+  ctx.drawImage(previewImg, 0, 0);
+  detections.forEach(d => {
+    const isWeed = d.class_name.toLowerCase().includes('weed');
+    const [x1,y1,x2,y2] = d.bbox;
+    const color = isWeed ? '#f87171' : '#3fb950';
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = Math.max(2, canvas.width * 0.004);
+    ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+    const label = `${d.class_name} ${Math.round(d.confidence*100)}%`;
+    const fs    = Math.max(12, Math.floor(canvas.width * 0.022));
+    ctx.font    = `bold ${fs}px "Space Grotesk", sans-serif`;
+    const tw = ctx.measureText(label).width, pad = 5;
+    ctx.fillStyle = color;
+    ctx.fillRect(x1, y1 - fs - pad*2, tw + pad*2, fs + pad*2);
+    ctx.fillStyle = '#000';
+    ctx.fillText(label, x1 + pad, y1 - pad);
+  });
+}
 
-    detections.forEach(d => {
-      const isWeed = d.class_name.toLowerCase().includes('weed');
-      const [x1, y1, x2, y2] = d.bbox;
-      const color = isWeed ? '#f87171' : '#3fb950';
-      const bw = x2 - x1, bh = y2 - y1;
+/* ── Reset ─────────────────────────────────── */
+function resetAll() {
+  uploadedFile = null;
+  fileInput.value = '';
+  previewSec.style.display  = 'none';
+  resultsSec.style.display  = 'none';
+  loadingSec.style.display  = 'none';
+  hideError();
+  uploadZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-      // Box stroke
-      ctx.strokeStyle = color;
-      ctx.lineWidth   = Math.max(2, canvas.width * 0.004);
-      ctx.strokeRect(x1, y1, bw, bh);
+/* ── Copy Code ─────────────────────────────── */
+function copyCode(btn) {
+  const text = btn.closest('.code-wrap').querySelector('.code-block').innerText;
+  navigator.clipboard.writeText(text.trim()).then(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  }).catch(() => {
+    btn.textContent = 'Failed';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
 
-      // Label background + text
-      const label = `${d.class_name} ${Math.round(d.confidence * 100)}%`;
-      const fs    = Math.max(12, Math.floor(canvas.width * 0.022));
-      ctx.font    = `bold ${fs}px "Space Grotesk", sans-serif`;
-      const tw    = ctx.measureText(label).width;
-      const pad   = 5;
-      ctx.fillStyle = color;
-      ctx.fillRect(x1, y1 - fs - pad * 2, tw + pad * 2, fs + pad * 2);
-      ctx.fillStyle = '#000';
-      ctx.fillText(label, x1 + pad, y1 - pad);
-    });
-  }
-
-  /* ── Reset ─────────────────────────────────── */
-  function resetAll() {
-    uploadedFile = null;
-    fileInput.value = '';
-    previewSec.style.display  = 'none';
-    resultsSec.style.display  = 'none';
-    loadingSec.style.display  = 'none';
-    hideError();
-    uploadZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  /* ── Copy Code ─────────────────────────────── */
-  function copyCode(btn) {
-    const codeBlock = btn.closest('.code-wrap').querySelector('.code-block');
-    const text = codeBlock.innerText || codeBlock.textContent;
-    navigator.clipboard.writeText(text.trim()).then(() => {
-      btn.textContent = '✓ Copied!';
-      setTimeout(() => btn.textContent = 'Copy', 2000);
-    }).catch(() => {
-      btn.textContent = 'Failed';
-      setTimeout(() => btn.textContent = 'Copy', 2000);
-    });
-  }
-
-  /* ── Error helpers ─────────────────────────── */
-  function showError(msg) {
-    errorBanner.textContent = msg;
-    errorBanner.style.display = 'block';
-  }
-  function hideError() {
-    errorBanner.style.display = 'none';
-  }
+function showError(msg) { errorBanner.textContent = msg; errorBanner.style.display = 'block'; }
+function hideError()    { errorBanner.style.display = 'none'; }
 </script>
 </body>
 </html>

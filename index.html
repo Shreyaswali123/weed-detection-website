@@ -293,12 +293,12 @@
     word-break: break-all;
   }
 
-  /* ─────────────────────────────────────────────────
-     UPLOAD ZONE — Fixed for mobile
-     The file input is NOT absolutely positioned.
-     Instead we use a <label> as the clickable trigger
-     and a separate hidden <input>.
-  ───────────────────────────────────────────────── */
+  /* ── UPLOAD ZONE ────────────────────────────────
+     Two hidden inputs:
+       #file-input   → gallery / multi-file picker
+       #camera-input → camera capture only (mobile)
+     Two labelled buttons inside the zone.
+  ─────────────────────────────────────────────── */
   .upload-zone {
     border: 2px dashed var(--border2);
     border-radius: var(--radius-xl);
@@ -312,41 +312,26 @@
     background: rgba(63,185,80,.04);
   }
 
-  /* The label IS the clickable drop zone */
-  .upload-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 36px 20px;
-    cursor: pointer;
-    width: 100%;
-    /* Ensure full tap area on mobile */
-    -webkit-tap-highlight-color: rgba(63,185,80,.1);
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .upload-label:hover,
-  .upload-label:focus-within {
-    background: rgba(63,185,80,.04);
-  }
-  .upload-label:active {
-    background: rgba(63,185,80,.08);
-  }
-
-  /* The actual file input — hidden but accessible */
-  #file-input {
+  /* Both file inputs hidden but accessible */
+  #file-input,
+  #camera-input {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
     overflow: hidden;
     clip: rect(0,0,0,0);
     white-space: nowrap;
     border: 0;
-    /* font-size 16px prevents iOS auto-zoom if it were visible */
-    font-size: 16px;
+    font-size: 16px; /* prevents iOS zoom if ever visible */
+  }
+
+  /* Outer drop zone — NOT a <label> so it doesn't steal clicks */
+  .upload-drop-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 20px 28px;
+    pointer-events: none; /* buttons below handle all interaction */
   }
 
   .upload-icon {
@@ -356,49 +341,86 @@
     display: flex; align-items: center; justify-content: center;
     margin-bottom: 14px;
     font-size: 26px;
-    pointer-events: none;
   }
-  .upload-label h3 {
+  .upload-drop-area h3 {
     font-size: clamp(15px, 3.5vw, 18px);
     font-weight: 600;
     margin-bottom: 8px;
-    pointer-events: none;
   }
-  .upload-label .sub-text {
+  .upload-drop-area .sub-text {
     color: var(--muted);
     font-size: 13px;
-    pointer-events: none;
   }
-  .upload-label .or {
-    margin: 12px 0;
+  .upload-drop-area .or {
+    margin: 14px 0 10px;
     color: var(--muted);
     font-size: 13px;
-    pointer-events: none;
   }
 
-  /* Browse button styled element inside label */
-  .browse-btn-inner {
+  /* Row holding the two action buttons */
+  .upload-btn-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    pointer-events: all; /* re-enable for the labels */
+    margin-top: 2px;
+  }
+
+  /* Shared style for both label-buttons */
+  .browse-btn-inner,
+  .camera-btn-inner {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     border: 1px solid var(--border2);
     color: var(--text);
-    padding: 9px 22px;
-    min-height: 42px;
+    padding: 10px 20px;
+    min-height: 44px;
     border-radius: var(--radius);
     font-size: 14px;
     font-weight: 500;
     background: transparent;
     font-family: inherit;
-    transition: background .2s, border-color .2s;
-    pointer-events: none; /* label handles the click */
+    cursor: pointer;
+    transition: background .2s, border-color .2s, color .2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(63,185,80,.12);
+    user-select: none;
+    -webkit-user-select: none;
+    white-space: nowrap;
   }
-  .upload-label:hover .browse-btn-inner,
-  .upload-label:active .browse-btn-inner {
+  .browse-btn-inner:hover,
+  .browse-btn-inner:active {
     background: var(--surface2);
     border-color: var(--accent);
     color: var(--accent);
   }
+  .camera-btn-inner {
+    border-color: rgba(96,165,250,.35);
+    color: #93c5fd;
+  }
+  .camera-btn-inner:hover,
+  .camera-btn-inner:active {
+    background: rgba(96,165,250,.08);
+    border-color: #60a5fa;
+    color: #60a5fa;
+  }
+
+  /* Queue badge shown when multiple files are loaded */
+  .queue-badge {
+    display: none;
+    background: rgba(63,185,80,.12);
+    border: 1px solid rgba(63,185,80,.3);
+    color: var(--accent);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 14px;
+  }
+  .queue-badge.visible { display: inline-flex; align-items: center; gap: 6px; }
 
   /* Error */
   #error-banner {
@@ -653,10 +675,10 @@
   }
 
   @media (max-width: 600px) {
-    .hero           { padding: 36px 1rem 32px; }
-    .upload-label   { padding: 28px 16px; }
-    .upload-icon    { width: 52px; height: 52px; font-size: 22px; margin-bottom: 12px; }
-    .preview-grid   { grid-template-columns: 1fr; }
+    .hero             { padding: 36px 1rem 32px; }
+    .upload-drop-area { padding: 28px 16px 22px; }
+    .upload-icon      { width: 52px; height: 52px; font-size: 22px; margin-bottom: 12px; }
+    .preview-grid     { grid-template-columns: 1fr; }
     .preview-card img,
     .preview-card canvas { height: 240px; }
     .preview-actions .btn-primary,
@@ -666,6 +688,10 @@
     .how-section    { margin-bottom: 48px; }
     .upload-section { margin-bottom: 40px; }
     .api-section    { margin-bottom: 48px; }
+    /* Stack buttons vertically on very small screens */
+    .upload-btn-row { flex-direction: column; align-items: stretch; padding: 0 8px; }
+    .browse-btn-inner,
+    .camera-btn-inner { justify-content: center; }
   }
 
   @media (max-width: 380px) {
@@ -679,9 +705,9 @@
   }
 
   @media (max-height: 500px) and (orientation: landscape) {
-    .hero         { padding: 24px 1rem 20px; }
-    .upload-label { padding: 20px 16px; }
-    .upload-icon  { display: none; }
+    .hero             { padding: 24px 1rem 20px; }
+    .upload-drop-area { padding: 20px 16px; }
+    .upload-icon      { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -762,26 +788,52 @@
 
       <!-- ══════════════════════════════════════════
            UPLOAD ZONE
-           Hidden <input> + visible <label>.
-           The label is the full clickable/tappable
-           area — no z-index tricks needed.
+
+           Two separate hidden inputs solve both issues:
+           ① #file-input   → gallery picker, supports multiple files
+           ② #camera-input → forces native camera via capture="environment"
+
+           They are NOT nested inside a shared <label>.
+           Each button is its own <label for="…"> so tapping
+           one can never accidentally trigger the other.
       ═══════════════════════════════════════════ -->
       <div class="upload-zone" id="upload-zone">
 
-        <!-- Hidden real file input — linked to label via id -->
+        <!-- ① Gallery / multi-file picker -->
         <input type="file"
                id="file-input"
                accept="image/*"
-               aria-label="Select a field image to analyse" />
+               multiple
+               aria-label="Select field images from your gallery" />
 
-        <!-- Label covers the entire zone — tapping anywhere triggers the input -->
-        <label for="file-input" class="upload-label">
+        <!-- ② Camera — capture attribute forces camera on mobile,
+             falls back gracefully to file picker on desktop -->
+        <input type="file"
+               id="camera-input"
+               accept="image/*"
+               capture="environment"
+               aria-label="Take a photo with your camera" />
+
+        <!-- Drop area (visual only — pointer-events disabled except on buttons) -->
+        <div class="upload-drop-area" id="upload-drop-area">
           <div class="upload-icon" aria-hidden="true">📷</div>
-          <h3>Drop your field image here</h3>
-          <p class="sub-text">Supports JPG, PNG, WEBP · max 20 MB</p>
+          <h3>Drop your field images here</h3>
+          <p class="sub-text">JPG · PNG · WEBP &nbsp;·&nbsp; max 20 MB &nbsp;·&nbsp; multiple files OK</p>
           <div class="or" aria-hidden="true">— or —</div>
-          <span class="browse-btn-inner">Browse / Camera</span>
-        </label>
+
+          <!-- Two explicit action buttons -->
+          <div class="upload-btn-row">
+            <label for="file-input" class="browse-btn-inner">
+              🗂 Browse Files
+            </label>
+            <label for="camera-input" class="camera-btn-inner">
+              📸 Take Photo
+            </label>
+          </div>
+
+          <!-- Shows "3 images queued" when multiple files loaded -->
+          <div class="queue-badge" id="queue-badge" aria-live="polite"></div>
+        </div>
 
       </div><!-- /.upload-zone -->
 
@@ -909,12 +961,16 @@
 <script>
 'use strict';
 
-const API_URL    = 'http://localhost:8000/predict';
-let uploadedFile = null;
+const API_URL = 'http://localhost:8000/predict';
+
+// Queue holds all pending files when multiple are selected
+let fileQueue   = [];
+let currentIdx  = 0;
 
 /* ── Element refs ──────────────────────────── */
 const uploadZone   = document.getElementById('upload-zone');
 const fileInput    = document.getElementById('file-input');
+const cameraInput  = document.getElementById('camera-input');
 const previewSec   = document.getElementById('preview-section');
 const loadingSec   = document.getElementById('loading-section');
 const resultsSec   = document.getElementById('results-section');
@@ -925,6 +981,7 @@ const ctx          = canvas.getContext('2d');
 const analyzeBtn   = document.getElementById('analyze-btn');
 const hamburgerBtn = document.getElementById('hamburger-btn');
 const mobileNav    = document.getElementById('mobile-nav');
+const queueBadge   = document.getElementById('queue-badge');
 
 /* ── Hamburger ─────────────────────────────── */
 hamburgerBtn.addEventListener('click', () => {
@@ -968,26 +1025,54 @@ uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag
 uploadZone.addEventListener('drop', e => {
   e.preventDefault();
   uploadZone.classList.remove('drag-over');
-  const f = e.dataTransfer.files[0];
-  if (f && f.type.startsWith('image/')) handleFile(f);
-  else showError('Please drop a valid image file (JPG, PNG, WEBP).');
+  const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+  if (files.length) handleFiles(files);
+  else showError('Please drop valid image files (JPG, PNG, WEBP).');
 });
 
-/* ── File input change ─────────────────────── */
+/* ── File input changes ────────────────────── */
+// Gallery picker — supports multiple
 fileInput.addEventListener('change', () => {
-  if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+  if (fileInput.files && fileInput.files.length) {
+    handleFiles([...fileInput.files]);
+  }
 });
 
-/* ── Handle File ───────────────────────────── */
-function handleFile(file) {
-  if (file.size > 20 * 1024 * 1024) {
-    showError('File too large. Please select an image under 20 MB.');
+// Camera picker — always single file
+cameraInput.addEventListener('change', () => {
+  if (cameraInput.files && cameraInput.files[0]) {
+    handleFiles([cameraInput.files[0]]);
+  }
+});
+
+/* ── Handle Files (array) ──────────────────── */
+function handleFiles(files) {
+  const valid = files.filter(f => f.size <= 20 * 1024 * 1024);
+  const oversized = files.length - valid.length;
+  if (!valid.length) {
+    showError('All selected files exceed 20 MB. Please choose smaller images.');
     return;
   }
-  uploadedFile = file;
-  hideError();
-  resultsSec.style.display = 'none';
+  if (oversized) showError(`${oversized} file(s) skipped — over 20 MB limit.`);
+  else hideError();
 
+  fileQueue  = valid;
+  currentIdx = 0;
+
+  // Update queue badge
+  if (valid.length > 1) {
+    queueBadge.textContent = `📁 ${valid.length} images queued`;
+    queueBadge.classList.add('visible');
+  } else {
+    queueBadge.classList.remove('visible');
+  }
+
+  resultsSec.style.display = 'none';
+  loadPreview(valid[0]);
+}
+
+/* ── Load preview for one file ─────────────── */
+function loadPreview(file) {
   const reader = new FileReader();
   reader.onload = e => {
     previewImg.src = e.target.result;
@@ -1005,6 +1090,13 @@ function handleFile(file) {
       ctx.font = `bold ${fs}px "Space Grotesk", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText('Tap "Analyze Image" to detect', canvas.width / 2, canvas.height / 2);
+
+      // Update analyze button label if queue
+      if (fileQueue.length > 1) {
+        analyzeBtn.textContent = `🔍 Analyze All ${fileQueue.length} Images`;
+      } else {
+        analyzeBtn.textContent = '🔍 Analyze Image';
+      }
     };
     previewSec.style.display = 'block';
     requestAnimationFrame(() =>
@@ -1016,27 +1108,48 @@ function handleFile(file) {
 
 /* ── Analyze ───────────────────────────────── */
 async function analyzeImage() {
-  if (!uploadedFile) return;
-  loadingSec.style.display  = 'block';
-  resultsSec.style.display  = 'none';
+  if (!fileQueue.length) return;
+
+  loadingSec.style.display = 'block';
+  resultsSec.style.display = 'none';
   hideError();
   analyzeBtn.disabled = true;
-  analyzeBtn.textContent = '⏳ Analyzing…';
 
+  // If multiple files, process them sequentially
+  if (fileQueue.length > 1) {
+    analyzeBtn.textContent = '⏳ Analyzing…';
+    // For demo purposes we run on all files but only show results for last one.
+    // In production you'd accumulate results or show a per-image breakdown.
+    for (let i = 0; i < fileQueue.length; i++) {
+      loadingSec.querySelector('p').textContent =
+        `Running YOLOv8 inference… (${i + 1} / ${fileQueue.length})`;
+      await runAnalysis(fileQueue[i], i === fileQueue.length - 1);
+    }
+  } else {
+    analyzeBtn.textContent = '⏳ Analyzing…';
+    await runAnalysis(fileQueue[0], true);
+  }
+
+  loadingSec.style.display = 'none';
+  loadingSec.querySelector('p').textContent = 'Running YOLOv8 inference…';
+  analyzeBtn.disabled = false;
+  analyzeBtn.textContent = fileQueue.length > 1
+    ? `🔍 Analyze All ${fileQueue.length} Images`
+    : '🔍 Analyze Image';
+}
+
+async function runAnalysis(file, showResult) {
   try {
     const fd = new FormData();
-    fd.append('file', uploadedFile);
+    fd.append('file', file);
     const resp = await fetch(API_URL, { method: 'POST', body: fd });
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);
-    renderResults(await resp.json());
+    if (showResult) renderResults(await resp.json());
+    else await resp.json(); // consume but don't render
   } catch (err) {
     console.warn('Backend not reachable — showing demo results:', err.message);
-    await new Promise(r => setTimeout(r, 600));
-    renderResults(getDemoResults());
-  } finally {
-    loadingSec.style.display = 'none';
-    analyzeBtn.disabled = false;
-    analyzeBtn.textContent = '🔍 Analyze Image';
+    await new Promise(r => setTimeout(r, showResult ? 600 : 200));
+    if (showResult) renderResults(getDemoResults());
   }
 }
 
@@ -1125,11 +1238,15 @@ function drawBoxes(detections) {
 
 /* ── Reset ─────────────────────────────────── */
 function resetAll() {
-  uploadedFile = null;
-  fileInput.value = '';
+  fileQueue  = [];
+  currentIdx = 0;
+  fileInput.value   = '';
+  cameraInput.value = '';
+  queueBadge.classList.remove('visible');
   previewSec.style.display  = 'none';
   resultsSec.style.display  = 'none';
   loadingSec.style.display  = 'none';
+  analyzeBtn.textContent    = '🔍 Analyze Image';
   hideError();
   uploadZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

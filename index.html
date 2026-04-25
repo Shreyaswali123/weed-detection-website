@@ -2,941 +2,1948 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<meta name="theme-color" content="#0d1117"/>
-<title>WeedScan — AI Weed Detection</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#07140c" />
+<title>WeedScan | AI Weed Detection</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
 
-  :root {
-    --bg: #0d1117; --surface: #161b22; --surface2: #21262d;
-    --border: rgba(240,246,252,.1); --border2: rgba(240,246,252,.2);
-    --text: #e6edf3; --muted: #8b949e; --accent: #3fb950;
-    --gray-500: #6b7280;
-    --radius: 8px; --radius-lg: 12px; --radius-xl: 16px;
-  }
+:root {
+  --bg: #f6f8f3;
+  --bg-deep: #07140c;
+  --ink: #102018;
+  --ink-soft: #445349;
+  --muted: #708077;
+  --surface: rgba(255, 255, 255, 0.86);
+  --surface-solid: #ffffff;
+  --surface-warm: #eef4e8;
+  --line: rgba(24, 48, 34, 0.12);
+  --line-strong: rgba(24, 48, 34, 0.2);
+  --green: #19a463;
+  --green-dark: #087443;
+  --green-soft: rgba(25, 164, 99, 0.12);
+  --lime: #b8e35d;
+  --blue: #2f74d0;
+  --red: #dc3f3f;
+  --amber: #c98320;
+  --shadow: 0 24px 70px rgba(17, 34, 24, 0.14);
+  --shadow-soft: 0 12px 34px rgba(17, 34, 24, 0.09);
+  --radius: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+  --header-h: 74px;
+}
 
-  html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 60px;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-  }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 18px);
+  -webkit-text-size-adjust: 100%;
+}
 
-  body {
-    font-family: "Space Grotesk", system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100dvh;
-    line-height: 1.6;
-    -webkit-tap-highlight-color: transparent;
-    overflow-x: hidden;
-  }
+body {
+  min-height: 100dvh;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(184, 227, 93, 0.22), transparent 32rem),
+    linear-gradient(180deg, #f8faf4 0%, var(--bg) 44%, #eef3e9 100%);
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
 
-  img, canvas { display: block; max-width: 100%; }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.34;
+  background-image:
+    linear-gradient(rgba(16, 32, 24, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 32, 24, 0.055) 1px, transparent 1px);
+  background-size: 54px 54px;
+  background-position: 0 0;
+  mask-image: linear-gradient(to bottom, transparent, black 16%, black 72%, transparent);
+  z-index: -1;
+  animation: grid-drift 18s linear infinite;
+}
 
-  /* ── HEADER ───────────────────────────────────── */
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 0 max(1.25rem, env(safe-area-inset-left));
-    padding-right: max(1.25rem, env(safe-area-inset-right));
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    background: rgba(13,17,23,.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    z-index: 200;
-  }
+img, canvas { display: block; max-width: 100%; }
+button, input, textarea { font: inherit; }
+button, label { -webkit-user-select: none; user-select: none; }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    flex-shrink: 0;
-  }
-  .logo-icon {
-    width: 30px; height: 30px;
-    background: linear-gradient(135deg, #3fb950, #1a7431);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
+a { color: inherit; }
 
-  .nav { display: flex; gap: 24px; align-items: center; }
-  .nav a {
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: color .2s;
-  }
-  .nav a:hover { color: var(--text); }
+.shell {
+  width: min(1180px, calc(100% - 40px));
+  margin-inline: auto;
+}
 
-  .header-cta { display: inline-flex; }
+.site-header {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  z-index: 100;
+  width: min(1180px, calc(100% - 28px));
+  height: var(--header-h);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 12px 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 18px;
+  background: rgba(250, 253, 246, 0.76);
+  box-shadow: 0 16px 46px rgba(17, 34, 24, 0.1);
+  backdrop-filter: blur(22px) saturate(1.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+  transition: height 220ms ease, top 220ms ease, box-shadow 220ms ease;
+}
 
-  /* Hamburger */
-  .hamburger {
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-    width: 44px; height: 44px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 10px;
-    border-radius: var(--radius);
-    transition: background .2s;
-    flex-shrink: 0;
-  }
-  .hamburger:hover { background: var(--surface2); }
-  .hamburger span {
-    display: block;
-    width: 22px; height: 2px;
-    background: var(--text);
-    border-radius: 2px;
-    transition: transform .3s ease, opacity .3s ease;
-    transform-origin: center;
-  }
-  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-  .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
-  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.site-header.scrolled {
+  top: 8px;
+  height: 64px;
+  box-shadow: 0 12px 36px rgba(17, 34, 24, 0.12);
+}
 
-  /* Mobile nav drawer */
-  .mobile-nav {
-    display: none;
-    position: fixed;
-    top: 60px; left: 0; right: 0;
-    background: rgba(13,17,23,.98);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
-    z-index: 199;
-    padding: 16px max(1.25rem, env(safe-area-inset-left)) 20px;
-    padding-right: max(1.25rem, env(safe-area-inset-right));
-    flex-direction: column;
-    gap: 4px;
-  }
-  .mobile-nav.open { display: flex; }
-  .mobile-nav a {
-    color: var(--text);
-    text-decoration: none;
-    font-size: 16px;
-    font-weight: 500;
-    padding: 12px 8px;
-    border-radius: var(--radius);
-    transition: background .2s;
-  }
-  .mobile-nav a:hover,
-  .mobile-nav a:active { background: var(--surface2); }
-  .mobile-nav .btn-primary {
-    margin-top: 8px;
-    width: 100%;
-    justify-content: center;
-    font-size: 15px;
-    padding: 13px 16px;
-  }
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 150;
+  width: 100%;
+  height: 3px;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--lime), var(--green), #5fd6ff);
+  transform: scaleX(var(--scroll-progress, 0));
+  transform-origin: left;
+  box-shadow: 0 0 18px rgba(184, 227, 93, 0.45);
+}
 
-  /* ── BUTTONS ──────────────────────────────────── */
-  .btn-primary {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    padding: 10px 18px;
-    min-height: 44px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .2s, transform .1s;
-    font-family: inherit;
-    touch-action: manipulation;
-    -webkit-appearance: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-    text-decoration: none;
-  }
-  .btn-primary:hover { background: #56d364; }
-  .btn-primary:active { transform: scale(0.97); background: #34a84b; }
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  min-width: max-content;
+}
 
-  .btn-outline {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border2);
-    color: var(--text);
-    padding: 10px 20px;
-    min-height: 44px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background .2s, border-color .2s;
-    background: transparent;
-    font-family: inherit;
-    touch-action: manipulation;
-    -webkit-appearance: none;
-    white-space: nowrap;
-  }
-  .btn-outline:hover { background: var(--surface2); border-color: var(--accent); }
-  .btn-outline:active { background: var(--surface2); transform: scale(0.97); }
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 32% 25%, rgba(255, 255, 255, 0.55), transparent 18px),
+    linear-gradient(135deg, #1fb970, #087443);
+  box-shadow: 0 12px 28px rgba(25, 164, 99, 0.28);
+}
 
-  /* ── HERO ─────────────────────────────────────── */
+.brand-mark svg { width: 21px; height: 21px; }
+
+.brand-text {
+  display: grid;
+  line-height: 1.05;
+}
+
+.brand-text strong {
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.brand-text span {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(16, 32, 24, 0.045);
+}
+
+.desktop-nav a,
+.mobile-panel a {
+  text-decoration: none;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.desktop-nav a {
+  padding: 9px 14px;
+  border-radius: 999px;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.desktop-nav a:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.82);
+  transform: translateY(-1px);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 11px 18px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, color 180ms ease, border-color 180ms ease;
+  touch-action: manipulation;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: -45% -35%;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.36), transparent 65%);
+  transform: translateX(-120%) rotate(8deg);
+  transition: transform 620ms ease;
+  pointer-events: none;
+}
+
+.btn:hover::after {
+  transform: translateX(120%) rotate(8deg);
+}
+
+.btn svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.btn-primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  box-shadow: 0 14px 26px rgba(25, 164, 99, 0.24);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(25, 164, 99, 0.3);
+}
+
+.btn-primary:active,
+.btn-outline:active,
+.btn-ghost:active,
+.icon-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-outline {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line-strong);
+  box-shadow: none;
+}
+
+.btn-outline:hover {
+  border-color: rgba(25, 164, 99, 0.45);
+  background: #ffffff;
+  transform: translateY(-2px);
+}
+
+.btn-ghost {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  display: none;
+  place-items: center;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.icon-btn:hover { background: #ffffff; border-color: var(--line-strong); }
+.icon-btn svg { width: 22px; height: 22px; }
+.menu-close { display: none; }
+.icon-btn.open .menu-open { display: none; }
+.icon-btn.open .menu-close { display: block; }
+
+.mobile-panel {
+  position: fixed;
+  top: 86px;
+  left: 14px;
+  right: 14px;
+  z-index: 99;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 16px;
+  background: rgba(250, 253, 246, 0.95);
+  box-shadow: var(--shadow);
+  transform-origin: top;
+  transform: translateY(-10px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.mobile-panel.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.mobile-panel a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+}
+
+.mobile-panel a:hover { background: rgba(16, 32, 24, 0.055); }
+.mobile-panel .btn { width: 100%; }
+
+.hero {
+  min-height: 100svh;
+  position: relative;
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 122px 0 64px;
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(3, 13, 8, 0.18) 0%, rgba(3, 13, 8, 0.5) 46%, rgba(3, 13, 8, 0.84) 100%),
+    url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=84") center calc(50% + var(--hero-drift, 0px)) / cover no-repeat;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 34%;
+  background: linear-gradient(180deg, transparent, rgba(7, 20, 12, 0.48) 34%, var(--bg) 100%);
+  z-index: -1;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(330px, 0.72fr);
+  align-items: end;
+  gap: 38px;
+}
+
+.eyebrow {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: badge-glow 3.8s ease-in-out infinite;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 0 6px rgba(184, 227, 93, 0.15);
+  animation: breathe 2.2s ease-in-out infinite;
+}
+
+.hero h1 {
+  margin-top: 24px;
+  max-width: 780px;
+  font-size: clamp(48px, 8.2vw, 106px);
+  line-height: 0.9;
+  letter-spacing: -0.075em;
+  font-weight: 800;
+}
+
+.hero h1 span {
+  color: #d4f58b;
+  text-shadow: 0 0 34px rgba(212, 245, 139, 0.22);
+  animation: text-glow 4.5s ease-in-out infinite;
+}
+
+.hero-copy {
+  max-width: 590px;
+  margin-top: 24px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(16px, 2vw, 19px);
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 34px;
+}
+
+.hero-panel {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 22px;
+  background: rgba(4, 22, 13, 0.46);
+  box-shadow: 0 34px 80px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  animation: float-panel 6s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.hero-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 12%, rgba(255, 255, 255, 0.16) 42%, transparent 62%);
+  transform: translateX(-120%);
+  animation: panel-shine 5.4s ease-in-out infinite;
+}
+
+.panel-preview {
+  aspect-ratio: 1.18;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(11, 54, 28, 0.14), rgba(184, 227, 93, 0.08)),
+    url("https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=900&q=80") center / cover no-repeat;
+}
+
+.panel-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background-image:
+    linear-gradient(rgba(212, 245, 139, 0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212, 245, 139, 0.45) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mix-blend-mode: screen;
+  animation: scan-grid 5.6s linear infinite;
+  z-index: 0;
+}
+
+.scan-line {
+  position: absolute;
+  z-index: 1;
+  left: 8%;
+  right: 8%;
+  top: 18%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d4f58b, transparent);
+  box-shadow: 0 0 22px rgba(212, 245, 139, 0.75);
+  animation: scan 3.4s ease-in-out infinite;
+}
+
+.box {
+  position: absolute;
+  z-index: 2;
+  border: 2px solid;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 24px rgba(80, 221, 140, 0.28);
+  animation: box-pulse 2.5s ease-in-out infinite;
+}
+
+.box::after {
+  content: attr(data-label);
+  position: absolute;
+  left: -2px;
+  bottom: calc(100% + 5px);
+  padding: 4px 7px;
+  border-radius: 6px;
+  color: #ffffff;
+  background: var(--box-color);
+  font: 700 11px/1 Inter, sans-serif;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.22);
+  white-space: nowrap;
+}
+
+.box.weed { --box-color: #ff6c6c; color: var(--box-color); width: 34%; height: 24%; left: 14%; top: 46%; }
+.box.crop { --box-color: #50dd8c; color: var(--box-color); width: 24%; height: 18%; right: 16%; top: 28%; }
+.box.crop { animation-delay: 650ms; }
+
+.panel-footer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.panel-stat {
+  padding: 18px 16px;
+  background:
+    linear-gradient(180deg, rgba(25, 164, 99, 0.12), transparent),
+    rgba(6, 27, 14, 0.82);
+}
+
+.panel-stat strong {
+  display: block;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.panel-stat span {
+  display: block;
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.trust-strip {
+  margin-top: 38px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  border: 1px solid rgba(212, 245, 139, 0.18);
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(212, 245, 139, 0.16);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.trust-item {
+  position: relative;
+  min-height: 112px;
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(212, 245, 139, 0.16), transparent 7rem),
+    rgba(7, 20, 12, 0.72);
+  transition: background 220ms ease, transform 220ms ease;
+}
+
+.trust-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(135deg, rgba(212, 245, 139, 0.16), transparent 55%);
+  transition: opacity 220ms ease;
+}
+
+.trust-item:hover {
+  transform: translateY(-2px);
+  background:
+    radial-gradient(circle at top left, rgba(212, 245, 139, 0.22), transparent 8rem),
+    rgba(8, 34, 18, 0.84);
+}
+
+.trust-item:hover::after { opacity: 1; }
+
+.trust-icon {
+  position: relative;
+  z-index: 1;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: #d4f58b;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 260ms ease, color 260ms ease, background 260ms ease;
+}
+
+.trust-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.trust-item:hover .trust-icon {
+  color: #07140c;
+  background: #d4f58b;
+  transform: rotate(-5deg) scale(1.08);
+}
+
+.trust-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.trust-item strong {
+  display: block;
+  color: #ffffff;
+  font-size: 19px;
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.trust-item span {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.section-pad { padding: 94px 0; }
+
+.section-head {
+  max-width: 650px;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+
+.section-label {
+  color: var(--green-dark);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.section-title {
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: clamp(31px, 5vw, 54px);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+}
+
+.section-sub {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.detect-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(340px, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.insight-panel,
+.workspace-card,
+.preview-card,
+.metric-card,
+.detections-list,
+.api-section,
+.step-card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.insight-panel {
+  position: sticky;
+  top: 94px;
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.insight-panel::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  opacity: 0;
+  background:
+    radial-gradient(circle at var(--mx, 18%) var(--my, 12%), rgba(184, 227, 93, 0.18), transparent 13rem),
+    linear-gradient(135deg, rgba(25, 164, 99, 0.08), transparent 42%);
+  transition: opacity 300ms ease;
+}
+
+.insight-panel:hover::before,
+.insight-panel.visible::before {
+  opacity: 1;
+}
+
+.insight-panel h2 {
+  font-size: 26px;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.insight-panel p {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.quality-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.quality-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.56);
+  overflow: hidden;
+  transition: transform 240ms ease, border-color 240ms ease, background 240ms ease, box-shadow 240ms ease;
+}
+
+.quality-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.78), transparent);
+  transform: translateX(-115%);
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+.quality-item:hover {
+  transform: translateX(8px);
+  border-color: rgba(25, 164, 99, 0.24);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 16px 36px rgba(17, 34, 24, 0.08);
+}
+
+.quality-item:hover::after {
+  opacity: 0.62;
+  animation: card-shimmer 720ms ease forwards;
+}
+
+.quality-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--green-dark);
+  background: var(--green-soft);
+  transition: transform 240ms ease, background 240ms ease, color 240ms ease;
+}
+
+.quality-icon svg { width: 18px; height: 18px; }
+.quality-item:hover .quality-icon {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  transform: rotate(-4deg) scale(1.08);
+}
+.quality-item strong { display: block; font-size: 14px; }
+.quality-item span { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; }
+
+.workspace-card {
+  position: relative;
+  border-radius: var(--radius-xl);
+  padding: 14px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.workspace-card::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  z-index: -1;
+  opacity: 0.5;
+  background: conic-gradient(from 90deg, transparent, rgba(25, 164, 99, 0.18), transparent, rgba(184, 227, 93, 0.15), transparent);
+  animation: workspace-aurora 12s linear infinite;
+}
+
+.workspace-card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  opacity: 0;
+  background: radial-gradient(circle at var(--mx, 78%) var(--my, 18%), rgba(184, 227, 93, 0.18), transparent 16rem);
+  transition: opacity 300ms ease;
+}
+
+.workspace-card:hover::after,
+.workspace-card.visible::after {
+  opacity: 1;
+}
+
+.upload-zone {
+  position: relative;
+  min-height: 360px;
+  border: 1.5px dashed rgba(8, 116, 67, 0.24);
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(241, 247, 235, 0.84)),
+    radial-gradient(circle at top right, rgba(184, 227, 93, 0.2), transparent 18rem);
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.upload-zone::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 32, 24, 0.06);
+  pointer-events: none;
+  animation: upload-frame 4.5s ease-in-out infinite;
+}
+
+.upload-zone::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  right: -80px;
+  top: -80px;
+  background: radial-gradient(circle, rgba(184, 227, 93, 0.24), transparent 70%);
+  transform: translate3d(0, 0, 0);
+  animation: upload-glow 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.upload-zone.has-files {
+  border-color: rgba(25, 164, 99, 0.42);
+  box-shadow: inset 0 0 0 4px rgba(25, 164, 99, 0.08), 0 18px 48px rgba(25, 164, 99, 0.12);
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--green);
+  box-shadow: inset 0 0 0 4px rgba(25, 164, 99, 0.08);
+  transform: translateY(-1px);
+}
+
+#file-input,
+#camera-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.upload-drop-area {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 520px);
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  padding: 38px 24px;
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+.upload-drop-area::before,
+.upload-drop-area::after {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  z-index: -1;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.upload-drop-area::before {
+  border: 1px solid rgba(25, 164, 99, 0.1);
+  transform: scale(0.72);
+  animation: upload-ring 3.4s ease-out infinite;
+}
+
+.upload-drop-area::after {
+  width: 72%;
+  height: 2px;
+  inset: 22% auto auto 14%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(25, 164, 99, 0.34), transparent);
+  filter: blur(0.3px);
+  animation: upload-sweep 3.8s ease-in-out infinite;
+}
+
+.upload-icon {
+  width: 82px;
+  height: 82px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.55), transparent 22px),
+    linear-gradient(135deg, var(--green), var(--green-dark));
+  box-shadow: 0 20px 40px rgba(25, 164, 99, 0.24);
+  animation: icon-float 3.8s ease-in-out infinite;
+}
+
+.upload-icon svg { width: 36px; height: 36px; }
+
+.upload-drop-area h3 {
+  margin-top: 24px;
+  font-size: clamp(24px, 4vw, 34px);
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+}
+
+.sub-text {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.upload-btn-row {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.browse-btn-inner,
+.camera-btn-inner {
+  min-height: 46px;
+  border-radius: var(--radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 11px 18px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  position: relative;
+  overflow: hidden;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.browse-btn-inner::after,
+.camera-btn-inner::after {
+  content: "";
+  position: absolute;
+  inset: -60% -35%;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.52), transparent 62%);
+  transform: translateX(-120%) rotate(8deg);
+  transition: transform 620ms ease;
+  pointer-events: none;
+}
+
+.browse-btn-inner:hover::after,
+.camera-btn-inner:hover::after {
+  transform: translateX(120%) rotate(8deg);
+}
+
+.browse-btn-inner {
+  color: #ffffff;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  box-shadow: 0 14px 26px rgba(25, 164, 99, 0.2);
+}
+
+.camera-btn-inner {
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.browse-btn-inner:hover,
+.camera-btn-inner:hover {
+  transform: translateY(-2px);
+}
+
+.browse-btn-inner svg,
+.camera-btn-inner svg { width: 17px; height: 17px; }
+
+.queue-badge {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  color: var(--green-dark);
+  background: var(--green-soft);
+  border: 1px solid rgba(25, 164, 99, 0.18);
+  font-size: 12px;
+  font-weight: 900;
+  animation: queue-pop 520ms cubic-bezier(0.18, 0.92, 0.28, 1.22) both, queue-breathe 2.2s ease-in-out 700ms infinite;
+}
+
+.queue-badge.visible { display: inline-flex; }
+
+#error-banner {
+  display: none;
+  margin-top: 14px;
+  padding: 13px 15px;
+  border: 1px solid rgba(220, 63, 63, 0.22);
+  border-radius: 12px;
+  color: #9f2424;
+  background: rgba(220, 63, 63, 0.09);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#preview-section,
+#results-section { display: none; }
+
+#preview-section { margin-top: 16px; }
+
+#preview-section[style*="block"] {
+  animation: section-rise 620ms cubic-bezier(0.18, 0.84, 0.26, 1) both;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.preview-card {
+  border-radius: 16px;
+  overflow: hidden;
+  transform-origin: center top;
+}
+
+#preview-section[style*="block"] .preview-card {
+  animation: preview-card-in 680ms cubic-bezier(0.18, 0.84, 0.26, 1) both;
+}
+
+#preview-section[style*="block"] .preview-card:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.preview-card-header,
+.detections-header {
+  min-height: 46px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(245, 249, 240, 0.7);
+}
+
+.preview-card-header .label,
+.detections-header span:first-child {
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.preview-card-header .meta,
+.detections-header span:last-child {
+  color: var(--muted);
+  font: 600 11px/1 JetBrains Mono, monospace;
+}
+
+.preview-card img,
+.preview-card canvas {
+  width: 100%;
+  height: 258px;
+  object-fit: cover;
+  background: #dbe6d2;
+  transition: transform 500ms ease, filter 500ms ease;
+}
+
+.preview-card:hover img,
+.preview-card:hover canvas {
+  transform: scale(1.035);
+  filter: saturate(1.06) contrast(1.04);
+}
+
+.preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.preview-actions .btn { flex: 1; min-width: 178px; }
+
+#loading-section {
+  display: none;
+  margin-top: 18px;
+  padding: 28px;
+  text-align: center;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.spinner-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid rgba(25, 164, 99, 0.14);
+  border-top-color: var(--green);
+  animation: spin 760ms linear infinite;
+}
+
+#loading-section p {
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+#results-section { margin-top: 18px; }
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.results-header h3 {
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.results-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--green-dark);
+  background: var(--green-soft);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.metric-card {
+  padding: 16px 12px;
+  border-radius: 14px;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.metric-card .val {
+  animation: metric-pop 520ms cubic-bezier(0.18, 0.92, 0.28, 1.22) both;
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+.metric-card .val {
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.metric-card .lbl {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.val.green { color: var(--green-dark); }
+.val.red { color: var(--red); }
+.val.blue { color: var(--blue); }
+
+.detections-list {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.detection-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--line);
+  transition: background 180ms ease;
+}
+
+.detection-item:last-child { border-bottom: 0; }
+.detection-item:hover { background: rgba(25, 164, 99, 0.05); }
+
+.det-left,
+.det-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.det-left { flex: 1; }
+.det-right { flex: 0 0 auto; }
+
+.det-badge {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: capitalize;
+}
+
+.det-badge.weed { color: #a22727; background: rgba(220, 63, 63, 0.12); }
+.det-badge.crop { color: var(--green-dark); background: var(--green-soft); }
+
+.det-coords,
+.det-conf {
+  color: var(--muted);
+  font: 600 11px/1 JetBrains Mono, monospace;
+}
+
+.det-coords {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conf-bar-wrap {
+  width: 68px;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(16, 32, 24, 0.1);
+}
+
+.conf-bar {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 600ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.weed-bar { background: linear-gradient(90deg, #ff9a9a, var(--red)); }
+.crop-bar { background: linear-gradient(90deg, #83e6a6, var(--green)); }
+
+.how-section {
+  padding: 100px 0;
+  background:
+    linear-gradient(180deg, rgba(7, 20, 12, 0.96), rgba(10, 32, 18, 0.92)),
+    url("https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1800&q=82") center / cover fixed;
+  color: #ffffff;
+}
+
+.how-section .section-title { color: #ffffff; }
+.how-section .section-label { color: #d4f58b; }
+.how-section .section-sub { color: rgba(255, 255, 255, 0.66); }
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.step-card {
+  min-height: 260px;
+  border-color: rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  transition: transform 220ms ease, background 220ms ease, border-color 220ms ease;
+}
+
+.step-card:hover {
+  transform: translateY(-6px);
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(212, 245, 139, 0.32);
+}
+
+.step-num {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #07140c;
+  background: #d4f58b;
+  font-weight: 900;
+  box-shadow: 0 0 0 0 rgba(212, 245, 139, 0.24);
+  animation: step-pulse 3.4s ease-in-out infinite;
+}
+
+.step-card h4 {
+  margin-top: 36px;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+
+.step-card p {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 14px;
+}
+
+.api-section-wrap { padding: 94px 0; }
+
+.api-section {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.api-top {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 24px;
+  padding: 28px;
+  align-items: center;
+}
+
+.api-top h2 {
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.api-top p {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.code-wrap {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #07140c;
+}
+
+.code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 10px 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.copy-btn {
+  min-height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 7px;
+  padding: 0 10px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.copy-btn:hover { background: rgba(255, 255, 255, 0.16); }
+
+.code-block {
+  padding: 18px;
+  overflow-x: auto;
+  color: #d8f3df;
+  font: 500 12px/1.75 JetBrains Mono, monospace;
+}
+
+.code-block .cm { color: #809889; }
+.code-block .kw { color: #d4f58b; }
+.code-block .str { color: #8ad6ff; }
+
+footer {
+  padding: 32px 20px 42px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+footer strong { color: var(--ink); }
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px) scale(0.985);
+  transition: opacity 760ms ease, transform 760ms cubic-bezier(0.18, 0.84, 0.26, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@keyframes grid-drift {
+  to { background-position: 54px 54px; }
+}
+
+@keyframes badge-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(212, 245, 139, 0); }
+  50% { box-shadow: 0 0 34px rgba(212, 245, 139, 0.18); }
+}
+
+@keyframes text-glow {
+  0%, 100% { text-shadow: 0 0 28px rgba(212, 245, 139, 0.16); }
+  50% { text-shadow: 0 0 46px rgba(212, 245, 139, 0.34); }
+}
+
+@keyframes panel-shine {
+  0%, 42% { transform: translateX(-120%); }
+  62%, 100% { transform: translateX(120%); }
+}
+
+@keyframes scan-grid {
+  to { background-position: 42px 42px; }
+}
+
+@keyframes box-pulse {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.18); transform: scale(1.025); }
+}
+
+@keyframes upload-frame {
+  0%, 100% { border-color: rgba(16, 32, 24, 0.06); }
+  50% { border-color: rgba(25, 164, 99, 0.18); }
+}
+
+@keyframes workspace-aurora {
+  to { transform: rotate(1turn); }
+}
+
+@keyframes upload-glow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.65; }
+  50% { transform: translate3d(-42px, 44px, 0) scale(1.18); opacity: 1; }
+}
+
+@keyframes upload-ring {
+  0% { opacity: 0; transform: scale(0.58); }
+  30% { opacity: 0.72; }
+  100% { opacity: 0; transform: scale(1.12); }
+}
+
+@keyframes upload-sweep {
+  0%, 100% { transform: translateY(0); opacity: 0; }
+  20%, 80% { opacity: 1; }
+  50% { transform: translateY(170px); }
+}
+
+@keyframes icon-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(-2deg); }
+}
+
+@keyframes card-shimmer {
+  to { transform: translateX(115%); }
+}
+
+@keyframes queue-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.82); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes queue-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(25, 164, 99, 0); }
+  50% { box-shadow: 0 0 0 8px rgba(25, 164, 99, 0.08); }
+}
+
+@keyframes section-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes preview-card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes metric-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.86); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes step-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 245, 139, 0); }
+  50% { box-shadow: 0 0 0 10px rgba(212, 245, 139, 0.12); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.72); opacity: 0.72; }
+}
+
+@keyframes float-panel {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes scan {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  45%, 55% { opacity: 1; }
+  50% { transform: translateY(210px); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (max-width: 960px) {
+  .desktop-nav,
+  .header-actions .btn-primary { display: none; }
+  .icon-btn { display: grid; }
+  .hero-grid,
+  .detect-layout,
+  .api-top { grid-template-columns: 1fr; }
+  .hero-panel { max-width: 520px; }
+  .insight-panel { position: static; }
+  .trust-strip,
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .steps { grid-template-columns: 1fr; }
+  .step-card { min-height: auto; }
+  .how-section { background-attachment: scroll; }
+}
+
+@media (max-width: 700px) {
+  :root { --header-h: 64px; }
+  .shell { width: min(100% - 28px, 1180px); }
+  .site-header {
+    top: 8px;
+    width: calc(100% - 18px);
+    padding-left: 12px;
+    border-radius: 14px;
+  }
+  .brand-text span { display: none; }
   .hero {
-    padding: 60px 1.25rem 48px;
-    text-align: center;
-    max-width: 700px;
-    margin: 0 auto;
+    min-height: auto;
+    padding: 112px 0 44px;
   }
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(63,185,80,.1);
-    color: var(--accent);
-    border: 1px solid rgba(63,185,80,.3);
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    margin-bottom: 20px;
+  .hero h1 { font-size: clamp(46px, 16vw, 70px); }
+  .hero-panel { animation: none; }
+  .trust-strip { grid-template-columns: 1fr 1fr; margin-top: 28px; }
+  .trust-item {
+    min-height: 96px;
+    grid-template-columns: 38px 1fr;
+    gap: 11px;
+    padding: 16px;
   }
-  .hero h1 {
-    font-size: clamp(28px, 7vw, 52px);
-    font-weight: 700;
-    letter-spacing: -1px;
-    line-height: 1.1;
-    margin-bottom: 16px;
+  .trust-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
   }
-  .hero h1 span { color: var(--accent); }
-  .hero p {
-    font-size: clamp(15px, 2.5vw, 17px);
-    color: var(--muted);
-    max-width: 520px;
-    margin: 0 auto 28px;
-  }
-  .hero .hero-cta {
-    font-size: clamp(14px, 3vw, 16px);
-    padding: 12px 28px;
-    min-height: 48px;
-  }
+  .section-pad,
+  .how-section,
+  .api-section-wrap { padding: 72px 0; }
+  .upload-zone { min-height: 330px; }
+  .preview-grid,
+  .metrics-grid { grid-template-columns: 1fr; }
+  .preview-card img,
+  .preview-card canvas { height: 230px; }
+  .api-top { padding: 18px; }
+  .code-block { font-size: 11px; }
+}
 
-  /* ── STATS BAR ────────────────────────────────── */
-  .stats-bar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    margin-bottom: 52px;
-  }
-  .stat {
-    text-align: center;
-    padding: 18px 20px;
-    flex: 1 1 120px;
-    min-width: 100px;
-  }
-  .stat-num { font-size: 20px; font-weight: 700; color: var(--accent); }
-  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: .3px; }
-
-  /* ── CONTAINER ────────────────────────────────── */
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 max(1.25rem, env(safe-area-inset-left))
-             max(80px, calc(60px + env(safe-area-inset-bottom)));
-    padding-right: max(1.25rem, env(safe-area-inset-right));
-  }
-
-  .section-title {
-    text-align: center;
-    font-size: clamp(20px, 5vw, 28px);
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin-bottom: 32px;
-  }
-  .section-title span { color: var(--accent); }
-
-  /* ── UPLOAD SECTION ───────────────────────────── */
-  .upload-section { max-width: 720px; margin: 0 auto 52px; }
-
-  .demo-note {
-    background: rgba(251,191,36,.08);
-    border: 1px solid rgba(251,191,36,.25);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-size: 12px;
-    color: #fbbf24;
-    margin-bottom: 16px;
-    text-align: center;
-    line-height: 1.6;
-  }
-  .demo-note code {
-    font-family: "DM Mono", monospace;
-    font-size: 11px;
-    word-break: break-all;
-  }
-
-  /* ── UPLOAD ZONE ────────────────────────────────
-     Two hidden inputs:
-       #file-input   → gallery / multi-file picker
-       #camera-input → camera capture only (mobile)
-     Two labelled buttons inside the zone.
-  ─────────────────────────────────────────────── */
-  .upload-zone {
-    border: 2px dashed var(--border2);
-    border-radius: var(--radius-xl);
-    background: var(--surface);
-    text-align: center;
-    transition: border-color .2s, background .2s;
-    overflow: hidden;
-  }
-  .upload-zone.drag-over {
-    border-color: var(--accent);
-    background: rgba(63,185,80,.04);
-  }
-
-  /* Both file inputs hidden but accessible */
-  #file-input,
-  #camera-input {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    white-space: nowrap;
-    border: 0;
-    font-size: 16px; /* prevents iOS zoom if ever visible */
-  }
-
-  /* Outer drop zone — NOT a <label> so it doesn't steal clicks */
-  .upload-drop-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 36px 20px 28px;
-    pointer-events: none; /* buttons below handle all interaction */
-  }
-
-  .upload-icon {
-    width: 60px; height: 60px;
-    background: rgba(63,185,80,.1);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 14px;
-    font-size: 26px;
-  }
-  .upload-drop-area h3 {
-    font-size: clamp(15px, 3.5vw, 18px);
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-  .upload-drop-area .sub-text {
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .upload-drop-area .or {
-    margin: 14px 0 10px;
-    color: var(--muted);
-    font-size: 13px;
-  }
-
-  /* Row holding the two action buttons */
-  .upload-btn-row {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-    pointer-events: all; /* re-enable for the labels */
-    margin-top: 2px;
-  }
-
-  /* Shared style for both label-buttons */
-  .browse-btn-inner,
-  .camera-btn-inner {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border: 1px solid var(--border2);
-    color: var(--text);
-    padding: 10px 20px;
-    min-height: 44px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    font-weight: 500;
-    background: transparent;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background .2s, border-color .2s, color .2s;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: rgba(63,185,80,.12);
-    user-select: none;
-    -webkit-user-select: none;
-    white-space: nowrap;
-  }
-  .browse-btn-inner:hover,
-  .browse-btn-inner:active {
-    background: var(--surface2);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .camera-btn-inner {
-    border-color: rgba(96,165,250,.35);
-    color: #93c5fd;
-  }
-  .camera-btn-inner:hover,
-  .camera-btn-inner:active {
-    background: rgba(96,165,250,.08);
-    border-color: #60a5fa;
-    color: #60a5fa;
-  }
-
-  /* Queue badge shown when multiple files are loaded */
-  .queue-badge {
-    display: none;
-    background: rgba(63,185,80,.12);
-    border: 1px solid rgba(63,185,80,.3);
-    color: var(--accent);
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-top: 14px;
-  }
-  .queue-badge.visible { display: inline-flex; align-items: center; gap: 6px; }
-
-  /* Error */
-  #error-banner {
-    display: none;
-    background: rgba(248,113,113,.1);
-    border: 1px solid rgba(248,113,113,.3);
-    color: #f87171;
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    font-size: 14px;
-    margin-top: 14px;
-    line-height: 1.5;
-  }
-
-  /* ── PREVIEW ──────────────────────────────────── */
-  #preview-section { display: none; margin-top: 20px; }
-  .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-  .preview-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-  .preview-card-header {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .preview-card-header .label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-  }
-  .preview-card img { width: 100%; height: 200px; object-fit: cover; }
-  .preview-card canvas { width: 100%; height: 200px; }
-
-  .preview-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 14px;
-    flex-wrap: wrap;
-  }
-  .preview-actions .btn-primary,
-  .preview-actions .btn-outline {
-    flex: 1;
-    max-width: 220px;
-    min-width: 140px;
-  }
-
-  /* ── LOADING ──────────────────────────────────── */
-  #loading-section { display: none; text-align: center; padding: 40px 16px; }
-  .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid var(--border2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-    margin: 0 auto 16px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #loading-section p { color: var(--muted); font-size: 14px; }
-
-  /* ── RESULTS ──────────────────────────────────── */
-  #results-section { display: none; margin-top: 28px; }
-
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .metric-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 14px 10px;
-    text-align: center;
-  }
-  .metric-card .val {
-    font-size: clamp(20px, 5vw, 28px);
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-  .metric-card .lbl {
-    font-size: 10px;
-    color: var(--muted);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: .4px;
-  }
-  .val.green { color: var(--accent); }
-  .val.red   { color: #f87171; }
-  .val.blue  { color: #60a5fa; }
-
-  .detections-list {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-  .detections-header {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .detection-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 11px 16px;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    transition: background .15s;
-    gap: 8px;
-  }
-  .detection-item:last-child { border-bottom: none; }
-  .detection-item:hover { background: var(--surface2); }
-  .det-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-  .det-badge {
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: capitalize;
-    flex-shrink: 0;
-  }
-  .det-badge.weed { background: rgba(248,113,113,.15); color: #f87171; }
-  .det-badge.crop { background: rgba(63,185,80,.15);   color: #3fb950; }
-  .det-coords {
-    font-family: "DM Mono", monospace;
-    font-size: 10px;
-    color: var(--gray-500);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .det-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .det-conf  { font-family: "DM Mono", monospace; font-size: 12px; color: var(--muted); }
-  .conf-bar-wrap { width: 60px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
-  .conf-bar { height: 100%; border-radius: 2px; transition: width .4s ease; }
-  .conf-bar.weed-bar { background: #f87171; }
-  .conf-bar.crop-bar { background: var(--accent); }
-
-  /* ── HOW IT WORKS ─────────────────────────────── */
-  .how-section { max-width: 860px; margin: 0 auto 72px; }
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 22px 18px;
-  }
-  .step-num {
-    width: 34px; height: 34px;
-    background: rgba(63,185,80,.1);
-    border: 1px solid rgba(63,185,80,.3);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 700; color: var(--accent);
-    margin-bottom: 12px;
-  }
-  .step-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-  .step-card p  { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
-  /* ── API SECTION ──────────────────────────────── */
-  .api-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 24px 20px;
-    max-width: 860px;
-    margin: 0 auto 72px;
-  }
-  .api-section h3 { font-size: clamp(16px, 4vw, 20px); font-weight: 700; margin-bottom: 8px; }
-  .api-section > p { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
-
-  .code-wrap { position: relative; }
-  .code-block {
-    background: #0d1117;
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 42px 16px 16px;
-    font-family: "DM Mono", monospace;
-    font-size: clamp(11px, 2.5vw, 13px);
-    line-height: 1.8;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: pre;
-    tab-size: 2;
-  }
-  .code-block .kw  { color: #ff7b72; }
-  .code-block .str { color: #a5d6ff; }
-  .code-block .cm  { color: #8b949e; }
-  .copy-btn {
-    position: absolute; top: 10px; right: 10px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    color: var(--muted);
-    border-radius: var(--radius);
-    padding: 5px 12px;
-    min-height: 30px;
-    font-size: 12px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: color .2s, border-color .2s;
-    touch-action: manipulation;
-    z-index: 1;
-  }
-  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
-
-  /* ── FOOTER ───────────────────────────────────── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 20px max(1.25rem, env(safe-area-inset-left));
-    padding-right: max(1.25rem, env(safe-area-inset-right));
-    padding-bottom: max(20px, calc(16px + env(safe-area-inset-bottom)));
-    text-align: center;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.8;
-  }
-
-  /* ─────────────────────────────────────────────────
-     RESPONSIVE BREAKPOINTS
-  ───────────────────────────────────────────────── */
-  @media (max-width: 768px) {
-    .nav        { display: none; }
-    .header-cta { display: none; }
-    .hamburger  { display: flex; }
-
-    .stat { flex: 1 1 45%; border-bottom: 1px solid var(--border); }
-    .stat:nth-child(odd) { border-right: 1px solid var(--border); }
-    .stat:nth-child(n+3) { border-bottom: none; }
-
-    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-    .steps        { grid-template-columns: 1fr; gap: 12px; }
-    .api-section  { padding: 20px 16px; }
-  }
-
-  @media (max-width: 600px) {
-    .hero             { padding: 36px 1rem 32px; }
-    .upload-drop-area { padding: 28px 16px 22px; }
-    .upload-icon      { width: 52px; height: 52px; font-size: 22px; margin-bottom: 12px; }
-    .preview-grid     { grid-template-columns: 1fr; }
-    .preview-card img,
-    .preview-card canvas { height: 240px; }
-    .preview-actions .btn-primary,
-    .preview-actions .btn-outline { max-width: 100%; }
-    .det-coords     { display: none; }
-    .container      { padding-left: 1rem; padding-right: 1rem; }
-    .how-section    { margin-bottom: 48px; }
-    .upload-section { margin-bottom: 40px; }
-    .api-section    { margin-bottom: 48px; }
-    /* Stack buttons vertically on very small screens */
-    .upload-btn-row { flex-direction: column; align-items: stretch; padding: 0 8px; }
-    .browse-btn-inner,
-    .camera-btn-inner { justify-content: center; }
-  }
-
-  @media (max-width: 380px) {
-    header      { padding: 0 1rem; }
-    .logo       { font-size: 16px; gap: 8px; }
-    .logo-icon  { width: 26px; height: 26px; font-size: 14px; }
-    .stat       { flex: 1 1 100%; border-right: none !important; border-bottom: 1px solid var(--border); }
-    .stat:last-child { border-bottom: none; }
-    .metrics-grid    { grid-template-columns: 1fr 1fr; gap: 8px; }
-    .metric-card     { padding: 12px 8px; }
-  }
-
-  @media (max-height: 500px) and (orientation: landscape) {
-    .hero             { padding: 24px 1rem 20px; }
-    .upload-drop-area { padding: 20px 16px; }
-    .upload-icon      { display: none; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
+@media (max-width: 430px) {
+  .hero-actions .btn,
+  .upload-btn-row label,
+  .preview-actions .btn { width: 100%; }
+  .panel-footer { grid-template-columns: 1fr; }
+  .panel-stat { padding: 14px; }
+  .trust-strip { grid-template-columns: 1fr; }
+  .trust-item { min-height: 86px; }
+}
 </style>
 </head>
 <body>
+<div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+<header class="site-header" id="site-header">
+  <a class="brand" href="#top" aria-label="WeedScan home">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 21c0-6.7 3.6-11.6 9-14.6C20 13 17 18.2 12 21Z" fill="currentColor" opacity=".75"/>
+        <path d="M12 21C12 13.1 8.7 7.9 3 4c.7 7.3 3.4 13.1 9 17Z" fill="currentColor"/>
+        <path d="M12 21c.1-5.3.1-10.7 0-16" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".9"/>
+      </svg>
+    </span>
+    <span class="brand-text">
+      <strong>WeedScan</strong>
+      <span>AI Field Vision</span>
+    </span>
+  </a>
 
-<!-- ── HEADER ─────────────────────────────────────── -->
-<header>
-  <div class="logo">
-    <div class="logo-icon">🌿</div>
-    WeedScan
-  </div>
-  <nav class="nav" aria-label="Main navigation">
+  <nav class="desktop-nav" aria-label="Primary navigation">
     <a href="#detect">Detect</a>
-    <a href="#how">How it works</a>
+    <a href="#how">Workflow</a>
     <a href="#api">API</a>
   </nav>
-  <button class="btn-primary header-cta"
-          onclick="document.getElementById('detect').scrollIntoView({behavior:'smooth'})">
-    Try Demo
-  </button>
-  <button class="hamburger" id="hamburger-btn"
-          aria-label="Open navigation menu"
-          aria-expanded="false"
-          aria-controls="mobile-nav">
-    <span></span><span></span><span></span>
-  </button>
+
+  <div class="header-actions">
+    <button class="btn btn-primary" onclick="scrollToSection('detect')">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Try demo
+    </button>
+    <button class="icon-btn" id="hamburger-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-nav">
+      <svg class="menu-open" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+      <svg class="menu-close" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
 </header>
 
-<!-- ── MOBILE NAV DRAWER ──────────────────────────── -->
-<nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
-  <a href="#detect" onclick="closeMobileNav()">🔍 Detect</a>
-  <a href="#how"    onclick="closeMobileNav()">📖 How it works</a>
-  <a href="#api"    onclick="closeMobileNav()">🔌 API</a>
-  <button class="btn-primary"
-          onclick="closeMobileNav();
-                   document.getElementById('detect').scrollIntoView({behavior:'smooth'})">
-    Try Demo →
-  </button>
+<nav class="mobile-panel" id="mobile-nav" aria-label="Mobile navigation">
+  <a href="#detect" onclick="closeMobileNav()">Detect</a>
+  <a href="#how" onclick="closeMobileNav()">Workflow</a>
+  <a href="#api" onclick="closeMobileNav()">API</a>
+  <button class="btn btn-primary" onclick="closeMobileNav(); scrollToSection('detect')">Try demo</button>
 </nav>
 
-<!-- ── HERO ───────────────────────────────────────── -->
-<section class="hero">
-  <div class="hero-badge">🤖 Powered by YOLOv8</div>
-  <h1>Detect Weeds with<br/><span>AI Precision</span></h1>
-  <p>Upload a field image and get instant weed vs. crop detection results powered by our trained YOLOv8 model.</p>
-  <button class="btn-primary hero-cta"
-          onclick="document.getElementById('detect').scrollIntoView({behavior:'smooth'})">
-    Analyze Your Field →
-  </button>
-</section>
-
-<!-- ── STATS BAR ──────────────────────────────────── -->
-<div class="stats-bar">
-  <div class="stat"><div class="stat-num">YOLOv8</div><div class="stat-label">Detection Model</div></div>
-  <div class="stat"><div class="stat-num">640px</div><div class="stat-label">Input Resolution</div></div>
-  <div class="stat"><div class="stat-num">~20ms</div><div class="stat-label">Inference Time</div></div>
-  <div class="stat"><div class="stat-num">mAP50</div><div class="stat-label">Evaluation Metric</div></div>
-</div>
-
-<!-- ── MAIN ───────────────────────────────────────── -->
-<main class="container">
-
-  <section id="detect">
-    <h2 class="section-title">Upload Field Image <span>→ Detect Weeds</span></h2>
-
-    <div class="upload-section">
-      <div class="demo-note" role="note">
-        ⚠️ Demo mode — connect your trained model backend at
-        <code>http://localhost:8000/predict</code> to get real detections.
-      </div>
-
-      <!-- ══════════════════════════════════════════
-           UPLOAD ZONE
-
-           Two separate hidden inputs solve both issues:
-           ① #file-input   → gallery picker, supports multiple files
-           ② #camera-input → forces native camera via capture="environment"
-
-           They are NOT nested inside a shared <label>.
-           Each button is its own <label for="…"> so tapping
-           one can never accidentally trigger the other.
-      ═══════════════════════════════════════════ -->
-      <div class="upload-zone" id="upload-zone">
-
-        <!-- ① Gallery / multi-file picker -->
-        <input type="file"
-               id="file-input"
-               accept="image/*"
-               multiple
-               aria-label="Select field images from your gallery" />
-
-        <!-- ② Camera — capture attribute forces camera on mobile,
-             falls back gracefully to file picker on desktop -->
-        <input type="file"
-               id="camera-input"
-               accept="image/*"
-               capture="environment"
-               aria-label="Take a photo with your camera" />
-
-        <!-- Drop area (visual only — pointer-events disabled except on buttons) -->
-        <div class="upload-drop-area" id="upload-drop-area">
-          <div class="upload-icon" aria-hidden="true">📷</div>
-          <h3>Drop your field images here</h3>
-          <p class="sub-text">JPG · PNG · WEBP &nbsp;·&nbsp; max 20 MB &nbsp;·&nbsp; multiple files OK</p>
-          <div class="or" aria-hidden="true">— or —</div>
-
-          <!-- Two explicit action buttons -->
-          <div class="upload-btn-row">
-            <label for="file-input" class="browse-btn-inner">
-              🗂 Browse Files
-            </label>
-            <label for="camera-input" class="camera-btn-inner">
-              📸 Take Photo
-            </label>
-          </div>
-
-          <!-- Shows "3 images queued" when multiple files loaded -->
-          <div class="queue-badge" id="queue-badge" aria-live="polite"></div>
-        </div>
-
-      </div><!-- /.upload-zone -->
-
-      <div id="error-banner" role="alert"></div>
-
-      <!-- Preview -->
-      <div id="preview-section" aria-live="polite">
-        <div class="preview-grid">
-          <div class="preview-card">
-            <div class="preview-card-header">
-              <span class="label">Original</span>
-              <span id="img-size-label" style="font-size:11px;color:var(--muted)"></span>
-            </div>
-            <img id="preview-img" alt="Uploaded field image" loading="lazy"/>
-          </div>
-          <div class="preview-card">
-            <div class="preview-card-header">
-              <span class="label">Annotated Result</span>
-              <span id="inf-time-label" style="font-size:11px;color:var(--accent)"></span>
-            </div>
-            <canvas id="annotated-canvas" aria-label="Detection result with bounding boxes"></canvas>
+<main id="top">
+  <section class="hero">
+    <div class="shell">
+      <div class="hero-grid">
+        <div class="hero-copy-wrap reveal">
+          <div class="eyebrow"><span class="status-dot"></span> YOLOv8 detection live</div>
+          <h1>Premium field intelligence for <span>weed detection.</span></h1>
+          <p class="hero-copy">Upload a field image and get clean, visual weed and crop detection results from a YOLOv8 model running on Hugging Face Spaces.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" onclick="scrollToSection('detect')">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14m7-7H5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+              </svg>
+              Analyze field image
+            </button>
+            <a class="btn btn-ghost" href="#how">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 5v14l11-7L8 5Z" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>
+              </svg>
+              See workflow
+            </a>
           </div>
         </div>
-        <div class="preview-actions">
-          <button class="btn-primary" id="analyze-btn" onclick="analyzeImage()">
-            🔍 Analyze Image
-          </button>
-          <button class="btn-outline" onclick="resetAll()">↺ New Image</button>
+
+        <aside class="hero-panel reveal" aria-label="Detection preview">
+          <div class="panel-preview">
+            <span class="scan-line" aria-hidden="true"></span>
+            <span class="box weed" data-label="weed 91%"></span>
+            <span class="box crop" data-label="crop 86%"></span>
+          </div>
+          <div class="panel-footer">
+            <div class="panel-stat"><strong>640px</strong><span>Input size</span></div>
+            <div class="panel-stat"><strong>20ms</strong><span>Inference</span></div>
+            <div class="panel-stat"><strong>mAP50</strong><span>Metric</span></div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="trust-strip reveal" role="list" aria-label="Platform capabilities">
+        <div class="trust-item" role="listitem">
+          <span class="trust-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 7h10v10H7zM4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="trust-copy"><strong>YOLOv8</strong><span>Model architecture</span></span>
         </div>
-      </div>
-
-      <!-- Loading -->
-      <div id="loading-section" role="status" aria-live="polite">
-        <div class="spinner" aria-hidden="true"></div>
-        <p>Running YOLOv8 inference…</p>
-      </div>
-
-      <!-- Results -->
-      <div id="results-section" aria-live="polite">
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="val green" id="met-total">—</div>
-            <div class="lbl">Total</div>
-          </div>
-          <div class="metric-card">
-            <div class="val red" id="met-weeds">—</div>
-            <div class="lbl">Weeds</div>
-          </div>
-          <div class="metric-card">
-            <div class="val green" id="met-crops">—</div>
-            <div class="lbl">Crops</div>
-          </div>
-          <div class="metric-card">
-            <div class="val blue" id="met-time">—</div>
-            <div class="lbl">Inference</div>
-          </div>
+        <div class="trust-item" role="listitem">
+          <span class="trust-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 8h12M6 12h8M6 16h12M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14l-4-3H6a2 2 0 0 1-2-2V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="trust-copy"><strong>FastAPI</strong><span>Backend runtime</span></span>
         </div>
-        <div class="detections-list">
-          <div class="detections-header">
-            <span>Detection Details</span>
-            <span id="det-count" style="font-size:11px;font-weight:400"></span>
-          </div>
-          <div id="detection-items"></div>
+        <div class="trust-item" role="listitem">
+          <span class="trust-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M8 7h11v12H8zM5 4h11v3M5 4v12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="trust-copy"><strong>Multi-image</strong><span>Upload queue</span></span>
         </div>
-      </div>
-
-    </div><!-- /.upload-section -->
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section id="how" class="how-section">
-    <h2 class="section-title">How It <span>Works</span></h2>
-    <div class="steps">
-      <div class="step-card">
-        <div class="step-num" aria-hidden="true">1</div>
-        <h4>Upload Image</h4>
-        <p>Upload any field photograph — drone, handheld camera, or mobile. Supports JPG, PNG, WEBP formats.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-num" aria-hidden="true">2</div>
-        <h4>YOLOv8 Inference</h4>
-        <p>Your image is sent to the FastAPI backend where our trained YOLOv8 model runs real-time object detection.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-num" aria-hidden="true">3</div>
-        <h4>Results & Bounding Boxes</h4>
-        <p>Detected objects are returned with bounding boxes, class labels, and confidence scores for each detection.</p>
+        <div class="trust-item" role="listitem">
+          <span class="trust-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 5h14v14H5zM9 9h6v6H9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="trust-copy"><strong>Bounding boxes</strong><span>Visual outputs</span></span>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- API SECTION -->
-  <section id="api" class="api-section">
-    <h3>🔌 API Integration</h3>
-    <p>Integrate weed detection directly into your application with a simple POST request.</p>
-    <div class="code-wrap">
-      <button class="copy-btn" onclick="copyCode(this)" aria-label="Copy code snippet">Copy</button>
-      <div class="code-block"><span class="cm"># POST /predict — send an image, get detections</span>
-<span class="kw">curl</span> -X POST <span class="str">"http://localhost:8000/predict"</span> \
+  <section id="detect" class="section-pad">
+    <div class="shell detect-layout">
+      <aside class="insight-panel reveal">
+        <p class="section-label">AI detection</p>
+        <h2>Turn field photos into readable crop intelligence.</h2>
+        <p>Designed for quick inspection, clean outputs, and confident review before you integrate the endpoint into a wider agriculture workflow.</p>
+        <div class="quality-list">
+          <div class="quality-item">
+            <span class="quality-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M7 4v6M17 4v6M6 14h6M6 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+            <span><strong>Fast upload flow</strong><span>Drop images, browse files, or capture from camera.</span></span>
+          </div>
+          <div class="quality-item">
+            <span class="quality-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 12h4l2-7 4 14 2-7h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span><strong>Detection summary</strong><span>Counts, inference time, confidence, and coordinates.</span></span>
+          </div>
+          <div class="quality-item">
+            <span class="quality-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14v14H5zM9 9h6v6H9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </span>
+            <span><strong>Annotated preview</strong><span>See model output directly beside the original image.</span></span>
+          </div>
+        </div>
+      </aside>
+
+      <div class="workspace-card reveal">
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" id="file-input" accept="image/*" multiple aria-label="Select field images from your gallery" />
+          <input type="file" id="camera-input" accept="image/*" capture="environment" aria-label="Take a photo with your camera" />
+
+          <div class="upload-drop-area" id="upload-drop-area">
+            <div class="upload-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 16V5m0 0-4 4m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3>Drop field images here</h3>
+            <p class="sub-text">JPG, PNG, or WEBP up to 20 MB. Multiple images supported.</p>
+            <div class="upload-btn-row">
+              <label for="file-input" class="browse-btn-inner">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H10l2 2h5.5A2.5 2.5 0 0 1 20 9.5v7A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                Browse files
+              </label>
+              <label for="camera-input" class="camera-btn-inner">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 9a3 3 0 0 1 3-3h1.5L10 4h4l1.5 2H17a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Take photo
+              </label>
+            </div>
+            <div class="queue-badge" id="queue-badge" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div id="error-banner" role="alert"></div>
+
+        <div id="preview-section" aria-live="polite">
+          <div class="preview-grid">
+            <div class="preview-card">
+              <div class="preview-card-header">
+                <span class="label">Original</span>
+                <span class="meta" id="img-size-label"></span>
+              </div>
+              <img id="preview-img" alt="Uploaded field image" loading="lazy" />
+            </div>
+            <div class="preview-card">
+              <div class="preview-card-header">
+                <span class="label">Annotated result</span>
+                <span class="meta" id="inf-time-label"></span>
+              </div>
+              <canvas id="annotated-canvas" aria-label="Detection result with bounding boxes"></canvas>
+            </div>
+          </div>
+          <div class="preview-actions">
+            <button class="btn btn-primary" id="analyze-btn" onclick="analyzeImage()">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14m7-7H5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+              </svg>
+              Analyze image
+            </button>
+            <button class="btn btn-outline" onclick="resetAll()">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              New image
+            </button>
+          </div>
+        </div>
+
+        <div id="loading-section" role="status" aria-live="polite">
+          <div class="spinner-wrap"><div class="spinner" aria-hidden="true"></div></div>
+          <p>Running YOLOv8 inference...</p>
+        </div>
+
+        <div id="results-section" aria-live="polite">
+          <div class="results-header">
+            <h3>Detection Results</h3>
+            <span class="results-badge" id="det-count-badge"></span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-card"><div class="val green" id="met-total">-</div><div class="lbl">Total</div></div>
+            <div class="metric-card"><div class="val red" id="met-weeds">-</div><div class="lbl">Weeds</div></div>
+            <div class="metric-card"><div class="val green" id="met-crops">-</div><div class="lbl">Crops</div></div>
+            <div class="metric-card"><div class="val blue" id="met-time">-</div><div class="lbl">Inference</div></div>
+          </div>
+          <div class="detections-list">
+            <div class="detections-header">
+              <span>Detection details</span>
+              <span id="det-count"></span>
+            </div>
+            <div id="detection-items"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="how-section">
+    <div class="shell">
+      <div class="section-head reveal">
+        <p class="section-label">Workflow</p>
+        <h2 class="section-title">From photo to bounding boxes in seconds.</h2>
+        <p class="section-sub">A simple path for testing field imagery now, with a clean API path for integrating later.</p>
+      </div>
+      <div class="steps">
+        <article class="step-card reveal">
+          <div class="step-num">1</div>
+          <div>
+            <h4>Upload image</h4>
+            <p>Use drone shots, handheld photos, or mobile camera captures in common image formats.</p>
+          </div>
+        </article>
+        <article class="step-card reveal">
+          <div class="step-num">2</div>
+          <div>
+            <h4>Run inference</h4>
+            <p>The image is sent to the FastAPI endpoint where YOLOv8 identifies weeds and crops.</p>
+          </div>
+        </article>
+        <article class="step-card reveal">
+          <div class="step-num">3</div>
+          <div>
+            <h4>Review output</h4>
+            <p>Annotated images, class labels, confidence scores, and counts appear directly in the interface.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="api" class="api-section-wrap">
+    <div class="shell">
+      <div class="api-section reveal">
+        <div class="api-top">
+          <div>
+            <p class="section-label">Developer API</p>
+            <h2>Plug detection into your own workflow.</h2>
+            <p>Send a field image to the prediction endpoint and receive detections, confidence values, counts, and timing data.</p>
+          </div>
+          <div class="code-wrap">
+            <div class="code-toolbar">
+              <span>POST /predict</span>
+              <button class="copy-btn" onclick="copyCode(this)" aria-label="Copy code snippet">Copy</button>
+            </div>
+            <pre class="code-block"><code><span class="cm"># Send an image and get detections</span>
+<span class="kw">curl</span> -X POST <span class="str">"Your API Endpoint"</span> \
   -F <span class="str">"file=@field_photo.jpg"</span> \
   | python3 -m json.tool
 
-<span class="cm"># Example response:</span>
+<span class="cm"># Example response</span>
 {
   <span class="str">"detections"</span>: [
     {
@@ -948,14 +1955,16 @@
   <span class="str">"weed_count"</span>: 3,
   <span class="str">"crop_count"</span>: 7,
   <span class="str">"inference_time_ms"</span>: 18.4
-}</div>
+}</code></pre>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
-
 </main>
 
 <footer>
-  WeedScan — YOLOv8 Weed Detection &nbsp;·&nbsp; Built with FastAPI + Ultralytics
+  <strong>WeedScan</strong> | YOLOv8 Weed Detection built with FastAPI, Ultralytics, and Hugging Face Spaces
 </footer>
 
 <script>
@@ -963,33 +1972,61 @@
 
 const API_URL = 'https://shreyaswali-weed-detection-api.hf.space/predict';
 
-// Queue holds all pending files when multiple are selected
-let fileQueue   = [];
-let currentIdx  = 0;
+let fileQueue = [];
 
-/* ── Element refs ──────────────────────────── */
-const uploadZone   = document.getElementById('upload-zone');
-const fileInput    = document.getElementById('file-input');
-const cameraInput  = document.getElementById('camera-input');
-const previewSec   = document.getElementById('preview-section');
-const loadingSec   = document.getElementById('loading-section');
-const resultsSec   = document.getElementById('results-section');
-const errorBanner  = document.getElementById('error-banner');
-const previewImg   = document.getElementById('preview-img');
-const canvas       = document.getElementById('annotated-canvas');
-const ctx          = canvas.getContext('2d');
-const analyzeBtn   = document.getElementById('analyze-btn');
+const siteHeader = document.getElementById('site-header');
+const hero = document.querySelector('.hero');
+const insightPanel = document.querySelector('.insight-panel');
+const workspaceCard = document.querySelector('.workspace-card');
+const uploadZone = document.getElementById('upload-zone');
+const fileInput = document.getElementById('file-input');
+const cameraInput = document.getElementById('camera-input');
+const previewSec = document.getElementById('preview-section');
+const loadingSec = document.getElementById('loading-section');
+const resultsSec = document.getElementById('results-section');
+const errorBanner = document.getElementById('error-banner');
+const previewImg = document.getElementById('preview-img');
+const canvas = document.getElementById('annotated-canvas');
+const ctx = canvas.getContext('2d');
+const analyzeBtn = document.getElementById('analyze-btn');
 const hamburgerBtn = document.getElementById('hamburger-btn');
-const mobileNav    = document.getElementById('mobile-nav');
-const queueBadge   = document.getElementById('queue-badge');
+const mobileNav = document.getElementById('mobile-nav');
+const queueBadge = document.getElementById('queue-badge');
 
-/* ── Hamburger ─────────────────────────────── */
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+}
+
+function iconPlus() {
+  return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14m7-7H5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>';
+}
+
+function setAnalyzeButton(text) {
+  analyzeBtn.innerHTML = `${iconPlus()} ${text}`;
+}
+
+function updateScrollMotion() {
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+  document.documentElement.style.setProperty('--scroll-progress', progress.toFixed(4));
+  siteHeader.classList.toggle('scrolled', window.scrollY > 18);
+
+  if (hero) {
+    const heroHeight = Math.max(hero.offsetHeight, 1);
+    const heroProgress = Math.min(window.scrollY / heroHeight, 1);
+    hero.style.setProperty('--hero-drift', `${heroProgress * 42}px`);
+  }
+}
+
+updateScrollMotion();
+window.addEventListener('scroll', updateScrollMotion, { passive: true });
+window.addEventListener('resize', updateScrollMotion);
+
 hamburgerBtn.addEventListener('click', () => {
   const isOpen = mobileNav.classList.toggle('open');
   hamburgerBtn.classList.toggle('open', isOpen);
   hamburgerBtn.setAttribute('aria-expanded', String(isOpen));
-  hamburgerBtn.setAttribute('aria-label',
-    isOpen ? 'Close navigation menu' : 'Open navigation menu');
+  hamburgerBtn.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
   document.body.style.overflow = isOpen ? 'hidden' : '';
 });
 
@@ -1001,67 +2038,86 @@ function closeMobileNav() {
   document.body.style.overflow = '';
 }
 
-document.addEventListener('click', e => {
+document.addEventListener('click', event => {
   if (mobileNav.classList.contains('open') &&
-      !mobileNav.contains(e.target) &&
-      !hamburgerBtn.contains(e.target)) {
+      !mobileNav.contains(event.target) &&
+      !hamburgerBtn.contains(event.target)) {
     closeMobileNav();
   }
 });
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && mobileNav.classList.contains('open')) {
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && mobileNav.classList.contains('open')) {
     closeMobileNav();
     hamburgerBtn.focus();
   }
 });
 
-/* ── Drag & Drop ───────────────────────────── */
-uploadZone.addEventListener('dragover', e => {
-  e.preventDefault();
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.13 });
+
+document.querySelectorAll('.reveal').forEach((el, index) => {
+  el.style.setProperty('--reveal-delay', `${Math.min(index * 70, 420)}ms`);
+  revealObserver.observe(el);
+});
+
+[insightPanel, workspaceCard].forEach(panel => {
+  if (!panel) return;
+  panel.addEventListener('pointermove', event => {
+    const rect = panel.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    panel.style.setProperty('--mx', `${x.toFixed(1)}%`);
+    panel.style.setProperty('--my', `${y.toFixed(1)}%`);
+  });
+});
+
+uploadZone.addEventListener('dragover', event => {
+  event.preventDefault();
   uploadZone.classList.add('drag-over');
 });
+
 uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
+
+uploadZone.addEventListener('drop', event => {
+  event.preventDefault();
   uploadZone.classList.remove('drag-over');
-  const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+  const files = [...event.dataTransfer.files].filter(file => file.type.startsWith('image/'));
   if (files.length) handleFiles(files);
-  else showError('Please drop valid image files (JPG, PNG, WEBP).');
+  else showError('Please drop valid image files: JPG, PNG, or WEBP.');
 });
 
-/* ── File input changes ────────────────────── */
-// Gallery picker — supports multiple
 fileInput.addEventListener('change', () => {
-  if (fileInput.files && fileInput.files.length) {
-    handleFiles([...fileInput.files]);
-  }
+  if (fileInput.files && fileInput.files.length) handleFiles([...fileInput.files]);
 });
 
-// Camera picker — always single file
 cameraInput.addEventListener('change', () => {
-  if (cameraInput.files && cameraInput.files[0]) {
-    handleFiles([cameraInput.files[0]]);
-  }
+  if (cameraInput.files && cameraInput.files[0]) handleFiles([cameraInput.files[0]]);
 });
 
-/* ── Handle Files (array) ──────────────────── */
 function handleFiles(files) {
-  const valid = files.filter(f => f.size <= 20 * 1024 * 1024);
+  const valid = files.filter(file => file.size <= 20 * 1024 * 1024);
   const oversized = files.length - valid.length;
+
   if (!valid.length) {
     showError('All selected files exceed 20 MB. Please choose smaller images.');
     return;
   }
-  if (oversized) showError(`${oversized} file(s) skipped — over 20 MB limit.`);
+
+  if (oversized) showError(`${oversized} file(s) skipped because they exceed 20 MB.`);
   else hideError();
 
-  fileQueue  = valid;
-  currentIdx = 0;
+  fileQueue = valid;
+  uploadZone.classList.add('has-files');
 
-  // Update queue badge
   if (valid.length > 1) {
-    queueBadge.textContent = `📁 ${valid.length} images queued`;
+    queueBadge.textContent = `${valid.length} images queued`;
     queueBadge.classList.add('visible');
   } else {
     queueBadge.classList.remove('visible');
@@ -1071,42 +2127,32 @@ function handleFiles(files) {
   loadPreview(valid[0]);
 }
 
-/* ── Load preview for one file ─────────────── */
 function loadPreview(file) {
   const reader = new FileReader();
-  reader.onload = e => {
-    previewImg.src = e.target.result;
+  reader.onload = event => {
+    previewImg.src = event.target.result;
     previewImg.onload = () => {
       document.getElementById('img-size-label').textContent =
-        `${previewImg.naturalWidth}×${previewImg.naturalHeight}`;
-
-      canvas.width  = previewImg.naturalWidth;
+        `${previewImg.naturalWidth}x${previewImg.naturalHeight}`;
+      canvas.width = previewImg.naturalWidth;
       canvas.height = previewImg.naturalHeight;
       ctx.drawImage(previewImg, 0, 0);
-      ctx.fillStyle = 'rgba(63,185,80,0.15)';
+      ctx.fillStyle = 'rgba(7, 20, 12, 0.42)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(255,255,255,0.75)';
-      const fs = Math.max(14, Math.floor(canvas.width / 20));
-      ctx.font = `bold ${fs}px "Space Grotesk", sans-serif`;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+      const fs = Math.max(14, Math.floor(canvas.width / 24));
+      ctx.font = `800 ${fs}px Inter, sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText('Tap "Analyze Image" to detect', canvas.width / 2, canvas.height / 2);
-
-      // Update analyze button label if queue
-      if (fileQueue.length > 1) {
-        analyzeBtn.textContent = `🔍 Analyze All ${fileQueue.length} Images`;
-      } else {
-        analyzeBtn.textContent = '🔍 Analyze Image';
-      }
+      ctx.fillText('Tap Analyze to detect', canvas.width / 2, canvas.height / 2);
+      setAnalyzeButton(fileQueue.length > 1 ? `Analyze all ${fileQueue.length} images` : 'Analyze image');
     };
+
     previewSec.style.display = 'block';
-    requestAnimationFrame(() =>
-      previewSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    );
+    requestAnimationFrame(() => previewSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
   };
   reader.readAsDataURL(file);
 }
 
-/* ── Analyze ───────────────────────────────── */
 async function analyzeImage() {
   if (!fileQueue.length) return;
 
@@ -1114,157 +2160,168 @@ async function analyzeImage() {
   resultsSec.style.display = 'none';
   hideError();
   analyzeBtn.disabled = true;
+  setAnalyzeButton('Analyzing...');
 
-  // If multiple files, process them sequentially
   if (fileQueue.length > 1) {
-    analyzeBtn.textContent = '⏳ Analyzing…';
-    // For demo purposes we run on all files but only show results for last one.
-    // In production you'd accumulate results or show a per-image breakdown.
-    for (let i = 0; i < fileQueue.length; i++) {
-      loadingSec.querySelector('p').textContent =
-        `Running YOLOv8 inference… (${i + 1} / ${fileQueue.length})`;
+    for (let i = 0; i < fileQueue.length; i += 1) {
+      loadingSec.querySelector('p').textContent = `Running YOLOv8 inference... (${i + 1} / ${fileQueue.length})`;
       await runAnalysis(fileQueue[i], i === fileQueue.length - 1);
     }
   } else {
-    analyzeBtn.textContent = '⏳ Analyzing…';
     await runAnalysis(fileQueue[0], true);
   }
 
   loadingSec.style.display = 'none';
-  loadingSec.querySelector('p').textContent = 'Running YOLOv8 inference…';
+  loadingSec.querySelector('p').textContent = 'Running YOLOv8 inference...';
   analyzeBtn.disabled = false;
-  analyzeBtn.textContent = fileQueue.length > 1
-    ? `🔍 Analyze All ${fileQueue.length} Images`
-    : '🔍 Analyze Image';
+  setAnalyzeButton(fileQueue.length > 1 ? `Analyze all ${fileQueue.length} images` : 'Analyze image');
 }
 
 async function runAnalysis(file, showResult) {
   try {
-    const fd = new FormData();
-    fd.append('file', file);
-    const resp = await fetch(API_URL, { method: 'POST', body: fd });
-    if (!resp.ok) throw new Error(`Server error ${resp.status}`);
-    if (showResult) renderResults(await resp.json());
-    else await resp.json(); // consume but don't render
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(API_URL, { method: 'POST', body: formData });
+
+    if (!response.ok) throw new Error(`Server error ${response.status}: ${await response.text()}`);
+
+    const data = await response.json();
+    if (showResult) renderResults(data);
   } catch (err) {
-    console.warn('Backend not reachable — showing demo results:', err.message);
-    await new Promise(r => setTimeout(r, showResult ? 600 : 200));
-    if (showResult) renderResults(getDemoResults());
+    loadingSec.style.display = 'none';
+    analyzeBtn.disabled = false;
+    setAnalyzeButton('Analyze image');
+    showError(`Inference failed: ${err.message}`);
   }
 }
 
-/* ── Demo Results ──────────────────────────── */
-function getDemoResults() {
-  return {
-    detections: [
-      { class_name:'weed', confidence:0.9213, bbox:[55,40,180,155]   },
-      { class_name:'weed', confidence:0.8761, bbox:[310,200,430,310] },
-      { class_name:'crop', confidence:0.9540, bbox:[200,80,330,200]  },
-      { class_name:'weed', confidence:0.7803, bbox:[480,270,590,370] },
-      { class_name:'crop', confidence:0.8925, bbox:[380,350,500,460] },
-    ],
-    total_detections: 5, weed_count: 3, crop_count: 2, inference_time_ms: 18.4,
-    annotated_image: null,
-  };
-}
-
-/* ── Render Results ────────────────────────── */
 function renderResults(data) {
-  document.getElementById('met-total').textContent = data.total_detections;
-  document.getElementById('met-weeds').textContent = data.weed_count;
-  document.getElementById('met-crops').textContent = data.crop_count;
-  document.getElementById('met-time').textContent  = data.inference_time_ms + 'ms';
-  document.getElementById('inf-time-label').textContent = `⚡ ${data.inference_time_ms}ms`;
+  const detections = Array.isArray(data.detections) ? data.detections : [];
+  const total = data.total_detections ?? detections.length;
+  const weedCount = data.weed_count ?? detections.filter(d => String(d.class_name).toLowerCase().includes('weed')).length;
+  const cropCount = data.crop_count ?? Math.max(0, total - weedCount);
+
+  document.getElementById('met-total').textContent = total;
+  document.getElementById('met-weeds').textContent = weedCount;
+  document.getElementById('met-crops').textContent = cropCount;
+  document.getElementById('met-time').textContent = `${data.inference_time_ms ?? '-'}ms`;
+  document.getElementById('inf-time-label').textContent = data.inference_time_ms ? `${data.inference_time_ms}ms` : '';
+
+  const badge = document.getElementById('det-count-badge');
+  badge.textContent = `${total} objects`;
 
   if (data.annotated_image) {
     const img = new Image();
-    img.onload = () => { canvas.width = img.naturalWidth; canvas.height = img.naturalHeight; ctx.drawImage(img, 0, 0); };
-    img.src = 'data:image/jpeg;base64,' + data.annotated_image;
+    img.onload = () => {
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = `data:image/jpeg;base64,${data.annotated_image}`;
   } else {
-    drawBoxes(data.detections);
+    drawBoxes(detections);
   }
 
   const container = document.getElementById('detection-items');
   container.innerHTML = '';
-  document.getElementById('det-count').textContent = `${data.detections.length} objects`;
+  document.getElementById('det-count').textContent = `${detections.length} objects`;
 
-  data.detections.forEach(d => {
-    const isWeed  = d.class_name.toLowerCase().includes('weed');
-    const confPct = Math.round(d.confidence * 100);
+  if (!detections.length) {
+    const empty = document.createElement('div');
+    empty.className = 'detection-item';
+    empty.textContent = 'No detections returned for this image.';
+    container.appendChild(empty);
+  }
+
+  detections.forEach(detection => {
+    const className = String(detection.class_name || 'object');
+    const isWeed = className.toLowerCase().includes('weed');
+    const confidence = Number(detection.confidence || 0);
+    const confPct = Math.round(confidence * 100);
+    const bbox = Array.isArray(detection.bbox) ? detection.bbox : [];
     const row = document.createElement('div');
     row.className = 'detection-item';
     row.innerHTML = `
       <div class="det-left">
-        <span class="det-badge ${isWeed ? 'weed' : 'crop'}">${d.class_name}</span>
-        <span class="det-coords">bbox [${d.bbox.map(v => Math.round(v)).join(', ')}]</span>
+        <span class="det-badge ${isWeed ? 'weed' : 'crop'}">${className}</span>
+        <span class="det-coords">[${bbox.map(v => Math.round(v)).join(', ')}]</span>
       </div>
       <div class="det-right">
-        <div class="conf-bar-wrap">
+        <span class="det-conf">${confPct}%</span>
+        <div class="conf-bar-wrap" aria-hidden="true">
           <div class="conf-bar ${isWeed ? 'weed-bar' : 'crop-bar'}" style="width:${confPct}%"></div>
         </div>
-        <span class="det-conf">${confPct}%</span>
-      </div>`;
+      </div>
+    `;
     container.appendChild(row);
   });
 
   resultsSec.style.display = 'block';
-  requestAnimationFrame(() =>
-    resultsSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  );
+  requestAnimationFrame(() => resultsSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
 }
 
-/* ── Draw Bounding Boxes ───────────────────── */
 function drawBoxes(detections) {
-  canvas.width  = previewImg.naturalWidth;
+  canvas.width = previewImg.naturalWidth;
   canvas.height = previewImg.naturalHeight;
   ctx.drawImage(previewImg, 0, 0);
-  detections.forEach(d => {
-    const isWeed = d.class_name.toLowerCase().includes('weed');
-    const [x1,y1,x2,y2] = d.bbox;
-    const color = isWeed ? '#f87171' : '#3fb950';
+
+  detections.forEach(detection => {
+    if (!detection.bbox) return;
+    const isWeed = String(detection.class_name).toLowerCase().includes('weed');
+    const [x1, y1, x2, y2] = detection.bbox;
+    const color = isWeed ? '#dc3f3f' : '#19a463';
+    const label = `${detection.class_name} ${Math.round(Number(detection.confidence || 0) * 100)}%`;
+    const fs = Math.max(12, Math.floor(canvas.width * 0.022));
+    const pad = Math.max(5, Math.floor(fs * 0.34));
+
     ctx.strokeStyle = color;
-    ctx.lineWidth   = Math.max(2, canvas.width * 0.004);
-    ctx.strokeRect(x1, y1, x2-x1, y2-y1);
-    const label = `${d.class_name} ${Math.round(d.confidence*100)}%`;
-    const fs    = Math.max(12, Math.floor(canvas.width * 0.022));
-    ctx.font    = `bold ${fs}px "Space Grotesk", sans-serif`;
-    const tw = ctx.measureText(label).width, pad = 5;
+    ctx.lineWidth = Math.max(2, canvas.width * 0.004);
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+    ctx.font = `800 ${fs}px Inter, sans-serif`;
+    const textWidth = ctx.measureText(label).width;
     ctx.fillStyle = color;
-    ctx.fillRect(x1, y1 - fs - pad*2, tw + pad*2, fs + pad*2);
-    ctx.fillStyle = '#000';
-    ctx.fillText(label, x1 + pad, y1 - pad);
+    ctx.fillRect(x1, Math.max(0, y1 - fs - pad * 2), textWidth + pad * 2, fs + pad * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(label, x1 + pad, Math.max(fs, y1 - pad));
   });
 }
 
-/* ── Reset ─────────────────────────────────── */
 function resetAll() {
-  fileQueue  = [];
-  currentIdx = 0;
-  fileInput.value   = '';
+  fileQueue = [];
+  uploadZone.classList.remove('has-files');
+  fileInput.value = '';
   cameraInput.value = '';
   queueBadge.classList.remove('visible');
-  previewSec.style.display  = 'none';
-  resultsSec.style.display  = 'none';
-  loadingSec.style.display  = 'none';
-  analyzeBtn.textContent    = '🔍 Analyze Image';
+  previewSec.style.display = 'none';
+  resultsSec.style.display = 'none';
+  loadingSec.style.display = 'none';
+  setAnalyzeButton('Analyze image');
+  analyzeBtn.disabled = false;
   hideError();
-  uploadZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  uploadZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-/* ── Copy Code ─────────────────────────────── */
-function copyCode(btn) {
-  const text = btn.closest('.code-wrap').querySelector('.code-block').innerText;
+function showError(message) {
+  errorBanner.textContent = message;
+  errorBanner.style.display = 'block';
+}
+
+function hideError() {
+  errorBanner.style.display = 'none';
+  errorBanner.textContent = '';
+}
+
+function copyCode(button) {
+  const text = button.closest('.code-wrap').querySelector('.code-block').innerText;
   navigator.clipboard.writeText(text.trim()).then(() => {
-    btn.textContent = '✓ Copied!';
-    setTimeout(() => btn.textContent = 'Copy', 2000);
+    button.textContent = 'Copied';
+    setTimeout(() => { button.textContent = 'Copy'; }, 1800);
   }).catch(() => {
-    btn.textContent = 'Failed';
-    setTimeout(() => btn.textContent = 'Copy', 2000);
+    button.textContent = 'Failed';
+    setTimeout(() => { button.textContent = 'Copy'; }, 1800);
   });
 }
-
-function showError(msg) { errorBanner.textContent = msg; errorBanner.style.display = 'block'; }
-function hideError()    { errorBanner.style.display = 'none'; }
 </script>
 </body>
 </html>
